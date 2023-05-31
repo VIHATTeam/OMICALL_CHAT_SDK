@@ -44,12 +44,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
-/OMICALL-Flutter-SDK-Sample/android/app/google-services.json
-/OMICALL-Flutter-SDK-Sample/ios/Runner/GoogleService-Info.plist
+
 #fastlane
 /fastlane/report.xml
-.fvm/
-/android/.gradle/
-.dart_tool/package_config.json
-.dart_tool/package_config_subset
-pubspec.lock
