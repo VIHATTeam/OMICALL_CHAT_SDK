@@ -106,6 +106,7 @@ class _CreateUserFormState extends State<CreateUserFormScreen> {
                 final result = await LiveTalkSdk.shareInstance.createRoom(
                   phone: _phoneController.text,
                   fullName: _userNameController.text,
+                  uuid: _phoneController.text,
                 );
                 EasyLoading.dismiss();
                 if (result != null && mounted) {

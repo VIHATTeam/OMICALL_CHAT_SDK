@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'package:socket_io_client/socket_io_client.dart';
 
 class LiveTalkSocketManager {
@@ -8,12 +8,13 @@ class LiveTalkSocketManager {
   static LiveTalkSocketManager get instance => const LiveTalkSocketManager._();
 
   Future<void> startListenWebSocket(
-      String token, String id, String tenantId) async {
-    IO.Socket socket = IO.io(
+    String token,
+    String id,
+    String tenantId,
+  ) async {
+    io.Socket socket = io.io(
       'https://socket-event-v1-stg.omicrm.com/$tenantId',
-      OptionBuilder()
-      .setTransports(['websocket'])
-      .setQuery({
+      OptionBuilder().setTransports(['websocket']).setQuery({
         "env": "widget",
         "type": "guest",
         "room_id": id,

@@ -1,7 +1,8 @@
 import 'package:livetalk_sdk/livetalk_api.dart';
 import 'package:livetalk_sdk/livetalk_socket_manager.dart';
 import 'package:livetalk_sdk/livetalk_string_util.dart';
-import 'package:uuid/uuid.dart';
+
+import 'entity/live_talk_message_entity.dart';
 
 class LiveTalkSdk {
   final String domainPbx;
@@ -17,6 +18,7 @@ class LiveTalkSdk {
   Future<String?> createRoom({
     required String phone,
     required String fullName,
+    required String uuid,
   }) async {
     final sdkInfo = LiveTalkApi.instance.sdkInfo;
     if (sdkInfo == null) {
@@ -25,7 +27,6 @@ class LiveTalkSdk {
     if (phone.isValidMobilePhone == false) {
       return null;
     }
-    final uuid = const Uuid().v4();
     final body = {
       "uuid": uuid,
       "start_type": "script",
@@ -62,5 +63,15 @@ class LiveTalkSdk {
 
   Future<bool> sendMessage({required String message}) async {
     return await LiveTalkApi.instance.sendMessage(message: message);
+  }
+
+  Future<List<LiveTalkMessageEntity>> getMessageHistory({
+    required int page,
+    int size = 15,
+  }) async {
+    return await LiveTalkApi.instance.getMessageHistory(
+      page: page,
+      size: size,
+    );
   }
 }

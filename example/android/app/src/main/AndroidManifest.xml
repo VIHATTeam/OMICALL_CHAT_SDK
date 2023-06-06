@@ -1,5 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.vihat.livetalksdk.livetalk_sdk_example">
+    <uses-permission android:name="android.permission.INTERNET"/>
    <application
         android:label="livetalk_sdk_example"
         android:name="${applicationName}"

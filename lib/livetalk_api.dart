@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
+import 'entity/live_talk_message_entity.dart';
 
 class LiveTalkApi {
   LiveTalkApi._();
@@ -10,12 +11,14 @@ class LiveTalkApi {
   Map<String, String>? _sdkInfo;
 
   Map<String, String>? get sdkInfo => _sdkInfo;
+  final String _baseUrl = 'https://social-network-v1-stg.omicrm.com/widget';
 
   Future<Map<String, dynamic>?> getConfig(String domainPbx) async {
-    var headers = {
-      'Content-Type': 'application/json'
-    };
-    var request = http.Request('POST', Uri.parse('https://social-network-v1-stg.omicrm.com/widget/config/get/$domainPbx'));
+    var headers = {'Content-Type': 'application/json'};
+    var request = http.Request(
+      'POST',
+      Uri.parse('$_baseUrl/config/get/$domainPbx'),
+    );
     request.body = json.encode({});
     request.headers.addAll(headers);
     http.StreamedResponse response = await request.send();
@@ -36,11 +39,14 @@ class LiveTalkApi {
     return null;
   }
 
-  Future<String?> createRoom({required Map<String, dynamic> body}) async {
-    var headers = {
-      'Content-Type': 'application/json'
-    };
-    var request = http.Request('POST', Uri.parse('https://social-network-v1-stg.omicrm.com/widget/new_room'));
+  Future<String?> createRoom({
+    required Map<String, dynamic> body,
+  }) async {
+    var headers = {'Content-Type': 'application/json'};
+    var request = http.Request(
+      'POST',
+      Uri.parse('$_baseUrl/new_room'),
+    );
     request.body = json.encode(body);
     request.headers.addAll(headers);
     http.StreamedResponse response = await request.send();
@@ -62,7 +68,10 @@ class LiveTalkApi {
       'Content-Type': 'application/json',
       'Authorization': "Bearer ${_sdkInfo!["access_token"] as String}",
     };
-    var request = http.Request('POST', Uri.parse('https://social-network-v1-stg.omicrm.com/widget/message/guest_send_message'));
+    var request = http.Request(
+      'POST',
+      Uri.parse('$_baseUrl/message/guest_send_message'),
+    );
     request.body = json.encode({
       "content": message,
       "uuid": _sdkInfo!["uuid"],
@@ -77,5 +86,30 @@ class LiveTalkApi {
       return true;
     }
     return false;
+  }
+
+  Future<List<LiveTalkMessageEntity>> getMessageHistory({
+    required int page,
+    int size = 15,
+  }) async {
+    var headers = {
+      'Content-Type': 'application/json',
+      'Authorization': "Bearer ${_sdkInfo!["access_token"] as String}",
+    };
+    var request = http.Request(
+      'POST',
+      Uri.parse('$_baseUrl/message/search_for_guest?page=$page&size=$size'),
+    );
+    request.body = json.encode({});
+    request.headers.addAll(headers);
+    http.StreamedResponse response = await request.send();
+    if (response.statusCode == 200) {
+      final data = await response.stream.bytesToString();
+      final jsonData = json.decode(data);
+      final items = jsonData["payload"]["items"] as List;
+      debugPrint(items.toString());
+      return List.generate(items.length, (index) => LiveTalkMessageEntity.fromJson(items[index]));
+    }
+    return [];
   }
 }

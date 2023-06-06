@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:livetalk_sdk/entity/live_talk_message_entity.dart';
 import 'package:livetalk_sdk/livetalk_sdk.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 import 'create_user_form_screen.dart';
+import 'items/message_item.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -15,16 +18,55 @@ class ChatScreen extends StatefulWidget {
 
 class ChatState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
+  final RefreshController _refreshController =
+      RefreshController(initialRefresh: false);
+  int page = 1;
+  int size = 15;
+  List<LiveTalkMessageEntity> messages = [];
+  bool isLoading = false;
 
   @override
   void initState() {
+    getMessageHistory();
     super.initState();
+  }
+
+  Future<void> getMessageHistory() async {
+    isLoading = true;
+    final data = await LiveTalkSdk.shareInstance.getMessageHistory(
+      page: page,
+      size: size,
+    );
+    isLoading = false;
+    setState(() {
+      if (page == 1) {
+        messages = data;
+      } else {
+        messages.addAll(data);
+      }
+    });
   }
 
   @override
   void dispose() {
+    _refreshController.dispose();
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _onRefresh() async {
+    page = 1;
+    await getMessageHistory();
+    _refreshController.refreshCompleted();
+  }
+
+  Future<void> _onLoading() async {
+    if (isLoading) {
+      return;
+    }
+    page += 1;
+    await getMessageHistory();
+    _refreshController.loadComplete();
   }
 
   @override
@@ -35,10 +77,41 @@ class ChatState extends State<ChatScreen> {
       ),
       body: Column(
         children: [
-          const Expanded(child: SizedBox()),
+          Expanded(
+            child: SmartRefresher(
+              reverse: true,
+              enablePullDown: true,
+              enablePullUp: true,
+              header: const WaterDropHeader(),
+              controller: _refreshController,
+              onRefresh: _onRefresh,
+              onLoading: _onLoading,
+              child: ListView.separated(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                ),
+                itemBuilder: (context, index) {
+                  return MessageItem(
+                    data: messages[index],
+                  );
+                },
+                separatorBuilder: (context, index) {
+                  return const SizedBox(
+                    height: 8,
+                  );
+                },
+                itemCount: messages.length,
+              ),
+            ),
+          ),
+          const SizedBox(
+            height: 6,
+          ),
           Row(
             children: [
-              const SizedBox(width: 16,),
+              const SizedBox(
+                width: 16,
+              ),
               Expanded(
                 child: TextField(
                   controller: _controller,
@@ -50,11 +123,14 @@ class ChatState extends State<ChatScreen> {
                   ),
                 ),
               ),
-              const SizedBox(width: 12,),
+              const SizedBox(
+                width: 12,
+              ),
               GestureDetector(
                 onTap: () async {
                   EasyLoading.show();
-                  await LiveTalkSdk.shareInstance.sendMessage(message: _controller.text);
+                  await LiveTalkSdk.shareInstance
+                      .sendMessage(message: _controller.text);
                   _controller.clear();
                   EasyLoading.dismiss();
                 },
@@ -91,10 +167,14 @@ class ChatState extends State<ChatScreen> {
                   ),
                 ),
               ),
-              const SizedBox(width: 16,),
+              const SizedBox(
+                width: 16,
+              ),
             ],
           ),
-          const SizedBox(height: 16,),
+          const SizedBox(
+            height: 16,
+          ),
         ],
       ),
     );
