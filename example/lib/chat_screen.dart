@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:livetalk_sdk/entity/live_talk_message_entity.dart';
@@ -21,15 +23,34 @@ class ChatState extends State<ChatScreen> {
   final RefreshController _refreshController =
       RefreshController(initialRefresh: false);
   int page = 1;
-  int size = 15;
+  int size = 20;
   List<LiveTalkMessageEntity> messages = [];
   bool isLoading = false;
+  late StreamSubscription _messageSubscription;
 
   @override
   void initState() {
     getMessageHistory();
     super.initState();
+    _messageSubscription = LiveTalkSdk.shareInstance.eventStream.listen((result) {
+      final event = result["event"];
+      final data  = result["data"];
+      if (event == "message") {
+        setState(() {
+          messages.insert(0, data as LiveTalkMessageEntity);
+        });
+      }
+    });
   }
+
+  @override
+  void dispose() {
+    _refreshController.dispose();
+    _controller.dispose();
+    _messageSubscription.cancel();
+    super.dispose();
+  }
+
 
   Future<void> getMessageHistory() async {
     isLoading = true;
@@ -45,13 +66,6 @@ class ChatState extends State<ChatScreen> {
         messages.addAll(data);
       }
     });
-  }
-
-  @override
-  void dispose() {
-    _refreshController.dispose();
-    _controller.dispose();
-    super.dispose();
   }
 
   Future<void> _onRefresh() async {
@@ -82,13 +96,13 @@ class ChatState extends State<ChatScreen> {
               reverse: true,
               enablePullDown: true,
               enablePullUp: true,
-              header: const WaterDropHeader(),
               controller: _refreshController,
               onRefresh: _onRefresh,
               onLoading: _onLoading,
               child: ListView.separated(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
+                  vertical: 12,
                 ),
                 itemBuilder: (context, index) {
                   return MessageItem(

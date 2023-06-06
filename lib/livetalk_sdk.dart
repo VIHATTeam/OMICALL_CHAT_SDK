@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:livetalk_sdk/livetalk_api.dart';
 import 'package:livetalk_sdk/livetalk_socket_manager.dart';
 import 'package:livetalk_sdk/livetalk_string_util.dart';
@@ -7,13 +9,14 @@ import 'entity/live_talk_message_entity.dart';
 class LiveTalkSdk {
   final String domainPbx;
   static LiveTalkSdk? _instance;
-
   static LiveTalkSdk get shareInstance => _instance!;
 
   LiveTalkSdk({required this.domainPbx}) {
     LiveTalkApi.instance.getConfig(domainPbx);
     _instance = this;
   }
+
+  Stream<dynamic> get eventStream => LiveTalkSocketManager.shareInstance.eventStream;
 
   Future<String?> createRoom({
     required String phone,
@@ -52,7 +55,7 @@ class LiveTalkSdk {
     final result = await LiveTalkApi.instance.createRoom(body: body);
     //trigger websocket
     if (result != null) {
-      LiveTalkSocketManager.instance.startListenWebSocket(
+      LiveTalkSocketManager.shareInstance.startListenWebSocket(
         LiveTalkApi.instance.sdkInfo!["access_token"] as String,
         result,
         sdkInfo["tenant_id"] as String,

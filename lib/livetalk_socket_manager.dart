@@ -1,11 +1,23 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:livetalk_sdk/entity/live_talk_message_entity.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'package:socket_io_client/socket_io_client.dart';
 
 class LiveTalkSocketManager {
-  const LiveTalkSocketManager._();
+  LiveTalkSocketManager._();
 
-  static LiveTalkSocketManager get instance => const LiveTalkSocketManager._();
+  static LiveTalkSocketManager? _instance;
+
+  static LiveTalkSocketManager get shareInstance {
+    _instance ??= LiveTalkSocketManager._();
+    return _instance!;
+  }
+
+  final StreamController _eventController = StreamController.broadcast();
+  Stream<dynamic> get eventStream => _eventController.stream;
 
   Future<void> startListenWebSocket(
     String token,
@@ -23,10 +35,15 @@ class LiveTalkSocketManager {
     );
     socket.connect();
     socket.onConnect((data) {
-      debugPrint(data.toString());
+      debugPrint("connected");
     });
     socket.on("message", (data) {
-      debugPrint(data.toString());
+      final jsonData = json.decode(data);
+      final detail = json.decode(jsonData["detail"]);
+      _eventController.sink.add({
+        "event": "message",
+        "data": LiveTalkMessageEntity.fromJson(detail),
+      });
     });
     socket.onError((data) {
       debugPrint(data.toString());
