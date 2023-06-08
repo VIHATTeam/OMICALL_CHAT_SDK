@@ -24,4 +24,16 @@ extension StringExtension on String {
     }
     return false;
   }
+
+  bool get isAudio {
+    final extension = p.extension(this);
+    if (extension.isEmpty) {
+      return false;
+    }
+    final type = extension.replaceAll(".", "").toLowerCase();
+    if (type == "mp3" || type == "wav") {
+      return true;
+    }
+    return false;
+  }
 }

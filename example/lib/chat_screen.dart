@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:images_picker/images_picker.dart';
@@ -187,20 +189,47 @@ class ChatState extends State<ChatScreen> {
               const SizedBox(width: 12,),
               GestureDetector(
                 onTap: () async {
-                  // FilePickerResult? result = await FilePicker.platform.pickFiles(allowMultiple: true);
-                  // if (result != null) {
-                  //   LiveTalkSdk.shareInstance.sendFiles(paths: result.paths as List<String>);
-                  // }
-                  List<Media>? res = await ImagesPicker.pick(
-                    count: 3,
-                    pickType: PickType.all,
-                    maxSize: 512,
+                  showCupertinoModalPopup<void>(
+                    context: context,
+                    builder: (BuildContext context) => CupertinoActionSheet(
+                      actions: <CupertinoActionSheetAction>[
+                        CupertinoActionSheetAction(
+                          child: const Text('Files'),
+                          onPressed: () async {
+                            Navigator.pop(context);
+                            FilePickerResult? result = await FilePicker.platform.pickFiles(allowMultiple: true);
+                            if (result != null) {
+                              EasyLoading.show();
+                              await LiveTalkSdk.shareInstance.sendFiles(paths: result.paths.cast<String>());
+                              EasyLoading.dismiss();
+                            }
+                          },
+                        ),
+                        CupertinoActionSheetAction(
+                          child: const Text('Images/Videos'),
+                          onPressed: () async {
+                            Navigator.pop(context);
+                            List<Media>? res = await ImagesPicker.pick(
+                              count: 3,
+                              pickType: PickType.all,
+                              maxSize: 512,
+                            );
+                            if (res?.isNotEmpty == true) {
+                              EasyLoading.show();
+                              await LiveTalkSdk.shareInstance.sendFiles(paths: res!.map((e) => e.path).toList());
+                              EasyLoading.dismiss();
+                            }
+                          },
+                        ),
+                      ],
+                      cancelButton: CupertinoActionSheetAction(
+                        child: const Text('Cancel'),
+                        onPressed: () async {
+                          Navigator.pop(context);
+                        },
+                      ),
+                    ),
                   );
-                  if (res?.isNotEmpty == true) {
-                    EasyLoading.show();
-                    await LiveTalkSdk.shareInstance.sendFiles(paths: res!.map((e) => e.path).toList());
-                    EasyLoading.dismiss();
-                  }
                 },
                 child: Container(
                   height: 40,

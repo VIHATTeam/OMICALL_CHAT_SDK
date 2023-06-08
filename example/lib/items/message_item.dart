@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:livetalk_sdk/entity/live_talk_message_entity.dart';
 import 'package:livetalk_sdk/livetalk.dart';
+import 'package:livetalk_sdk_example/audio_preview.dart';
 import 'package:livetalk_sdk_example/datetime_helper.dart';
 import 'package:livetalk_sdk_example/extensions/string_extension.dart';
 import 'package:livetalk_sdk_example/image_preview.dart';
@@ -88,6 +88,16 @@ class MessageItem extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) => VideoPreview(video: file),
+                    fullscreenDialog: true,
+                  ),
+                );
+                return;
+              }
+              if (file.isAudio) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AudioPreview(audio: file),
                     fullscreenDialog: true,
                   ),
                 );

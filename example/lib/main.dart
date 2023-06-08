@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:livetalk_sdk/livetalk_sdk.dart';
 import 'package:livetalk_sdk_example/create_user_form_screen.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
