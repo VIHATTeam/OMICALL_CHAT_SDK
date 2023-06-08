@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:images_picker/images_picker.dart';
 import 'package:livetalk_sdk/entity/live_talk_message_entity.dart';
 import 'package:livetalk_sdk/livetalk_sdk.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
@@ -32,9 +33,10 @@ class ChatState extends State<ChatScreen> {
   void initState() {
     getMessageHistory();
     super.initState();
-    _messageSubscription = LiveTalkSdk.shareInstance.eventStream.listen((result) {
+    _messageSubscription =
+        LiveTalkSdk.shareInstance.eventStream.listen((result) {
       final event = result["event"];
-      final data  = result["data"];
+      final data = result["data"];
       if (event == "message") {
         setState(() {
           messages.insert(0, data as LiveTalkMessageEntity);
@@ -48,9 +50,9 @@ class ChatState extends State<ChatScreen> {
     _refreshController.dispose();
     _controller.dispose();
     _messageSubscription.cancel();
+    LiveTalkSdk.shareInstance.disconnect();
     super.dispose();
   }
-
 
   Future<void> getMessageHistory() async {
     isLoading = true;
@@ -88,6 +90,7 @@ class ChatState extends State<ChatScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Chat"),
+        automaticallyImplyLeading: false,
       ),
       body: Column(
         children: [
@@ -130,6 +133,8 @@ class ChatState extends State<ChatScreen> {
                 child: TextField(
                   controller: _controller,
                   decoration: InputDecoration(
+                    contentPadding:
+                        const EdgeInsets.symmetric(vertical: 2, horizontal: 12),
                     prefixIcon: const Icon(Icons.cleaning_services),
                     labelText: "Input",
                     enabledBorder: myInputBorder(),
@@ -143,14 +148,15 @@ class ChatState extends State<ChatScreen> {
               GestureDetector(
                 onTap: () async {
                   EasyLoading.show();
-                  await LiveTalkSdk.shareInstance
-                      .sendMessage(message: _controller.text);
+                  await LiveTalkSdk.shareInstance.sendMessage(
+                    message: _controller.text,
+                  );
                   _controller.clear();
                   EasyLoading.dismiss();
                 },
                 child: Container(
-                  height: 50,
-                  width: 50,
+                  height: 40,
+                  width: 40,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
@@ -170,13 +176,58 @@ class ChatState extends State<ChatScreen> {
                     ],
                   ),
                   child: const Center(
-                    child: Text(
-                      'Send',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
+                    child: Icon(
+                      Icons.send,
+                      size: 24,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12,),
+              GestureDetector(
+                onTap: () async {
+                  // FilePickerResult? result = await FilePicker.platform.pickFiles(allowMultiple: true);
+                  // if (result != null) {
+                  //   LiveTalkSdk.shareInstance.sendFiles(paths: result.paths as List<String>);
+                  // }
+                  List<Media>? res = await ImagesPicker.pick(
+                    count: 3,
+                    pickType: PickType.all,
+                    maxSize: 512,
+                  );
+                  if (res?.isNotEmpty == true) {
+                    EasyLoading.show();
+                    await LiveTalkSdk.shareInstance.sendFiles(paths: res!.map((e) => e.path).toList());
+                    EasyLoading.dismiss();
+                  }
+                },
+                child: Container(
+                  height: 40,
+                  width: 40,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.teal,
+                        Colors.teal[200]!,
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(25),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black12,
+                        offset: Offset(5, 5),
+                        blurRadius: 10,
+                      )
+                    ],
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.file_upload,
+                      size: 24,
+                      color: Colors.white,
                     ),
                   ),
                 ),

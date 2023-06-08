@@ -18,13 +18,14 @@ class LiveTalkSocketManager {
 
   final StreamController _eventController = StreamController.broadcast();
   Stream<dynamic> get eventStream => _eventController.stream;
+  io.Socket? _socket;
 
   Future<void> startListenWebSocket(
     String token,
     String id,
     String tenantId,
   ) async {
-    io.Socket socket = io.io(
+    _socket = io.io(
       'https://socket-event-v1-stg.omicrm.com/$tenantId',
       OptionBuilder().setTransports(['websocket']).setQuery({
         "env": "widget",
@@ -33,11 +34,11 @@ class LiveTalkSocketManager {
         "token": token,
       }).build(),
     );
-    socket.connect();
-    socket.onConnect((data) {
+    _socket!.connect();
+    _socket!.onConnect((data) {
       debugPrint("connected");
     });
-    socket.on("message", (data) {
+    _socket!.on("message", (data) {
       final jsonData = json.decode(data);
       final detail = json.decode(jsonData["detail"]);
       _eventController.sink.add({
@@ -45,8 +46,13 @@ class LiveTalkSocketManager {
         "data": LiveTalkMessageEntity.fromJson(detail),
       });
     });
-    socket.onError((data) {
+    _socket!.onError((data) {
       debugPrint(data.toString());
     });
+  }
+
+  disconnect() {
+    _socket!.disconnect();
+    _socket = null;
   }
 }

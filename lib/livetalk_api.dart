@@ -11,7 +11,7 @@ class LiveTalkApi {
   Map<String, String>? _sdkInfo;
 
   Map<String, String>? get sdkInfo => _sdkInfo;
-  final String _baseUrl = 'https://social-network-v1-stg.omicrm.com/widget';
+  final String _baseUrl = 'https://livetalk-v2-stg.omicrm.com/widget';
 
   Future<Map<String, dynamic>?> getConfig(String domainPbx) async {
     var headers = {'Content-Type': 'application/json'};
@@ -76,6 +76,33 @@ class LiveTalkApi {
       "content": message,
       "uuid": _sdkInfo!["uuid"],
       "room_id": _sdkInfo!["room_id"],
+    });
+    request.headers.addAll(headers);
+    http.StreamedResponse response = await request.send();
+    if (response.statusCode == 200) {
+      final data = await response.stream.bytesToString();
+      final jsonData = json.decode(data);
+      debugPrint(jsonData.toString());
+      return true;
+    }
+    return false;
+  }
+
+  Future<bool> sendFiles({required List<String> paths}) async {
+    var headers = {
+      'Content-Type': 'multipart/form-data',
+      'Authorization': "Bearer ${_sdkInfo!["access_token"] as String}",
+    };
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$_baseUrl/message/guest_send_media'),
+    );
+    for (var path in paths) {
+      request.files.add(await http.MultipartFile.fromPath('files', path));
+    }
+    request.fields.addAll({
+      "uuid": _sdkInfo!["uuid"] ?? "",
+      "room_id": _sdkInfo!["room_id"] ?? "",
     });
     request.headers.addAll(headers);
     http.StreamedResponse response = await request.send();

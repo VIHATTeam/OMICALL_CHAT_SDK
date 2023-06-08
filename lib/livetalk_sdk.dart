@@ -10,6 +10,7 @@ class LiveTalkSdk {
   final String domainPbx;
   static LiveTalkSdk? _instance;
   static LiveTalkSdk get shareInstance => _instance!;
+  final String fileUrl = 'https://cdn.omicrm.com/crm/';
 
   LiveTalkSdk({required this.domainPbx}) {
     LiveTalkApi.instance.getConfig(domainPbx);
@@ -22,6 +23,11 @@ class LiveTalkSdk {
     required String phone,
     required String fullName,
     required String uuid,
+    String? domain,
+    String? address,
+    String? ip,
+    double? lat,
+    double? long,
   }) async {
     final sdkInfo = LiveTalkApi.instance.sdkInfo;
     if (sdkInfo == null) {
@@ -34,6 +40,7 @@ class LiveTalkSdk {
       "uuid": uuid,
       "start_type": "script",
       "tenant_id": sdkInfo["tenant_id"],
+      "auto_expired": false,
       "guest_info": {
         "uuid": uuid,
         "phone": phone,
@@ -44,12 +51,12 @@ class LiveTalkSdk {
           "phone_number": phone,
           "mail": ""
         },
-        "domain": "https://omicall.com",
+        "domain": domain ?? "https://omicall.com",
         "browser": "",
-        "address": "Ho Chi Minh City, Vietnam",
-        "ip": "",
-        "lat": 10.8326,
-        "lon": 106.6581
+        "address": address ?? "Vietnam",
+        "ip": ip ?? "",
+        "lat": lat ?? 0,
+        "lon": long ?? 0
       }
     };
     final result = await LiveTalkApi.instance.createRoom(body: body);
@@ -68,6 +75,10 @@ class LiveTalkSdk {
     return await LiveTalkApi.instance.sendMessage(message: message);
   }
 
+  Future<bool> sendFiles({required List<String> paths}) async {
+    return await LiveTalkApi.instance.sendFiles(paths: paths);
+  }
+
   Future<List<LiveTalkMessageEntity>> getMessageHistory({
     required int page,
     int size = 15,
@@ -76,5 +87,9 @@ class LiveTalkSdk {
       page: page,
       size: size,
     );
+  }
+
+  void disconnect() {
+    LiveTalkSocketManager.shareInstance.disconnect();
   }
 }

@@ -16,9 +16,9 @@ class CreateUserFormScreen extends StatefulWidget {
 class _CreateUserFormState extends State<CreateUserFormScreen> {
   //video
   late final TextEditingController _userNameController = TextEditingController()
-    ..text = "Steve";
+    ..text = "Steve2";
   late final TextEditingController _phoneController = TextEditingController()
-    ..text = '0961046444';
+    ..text = '0961046446';
   late final TextEditingController _emailController = TextEditingController()
     ..text = '';
 
@@ -110,7 +110,10 @@ class _CreateUserFormState extends State<CreateUserFormScreen> {
                 );
                 EasyLoading.dismiss();
                 if (result != null && mounted) {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const ChatScreen()));
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ChatScreen()),
+                  );
                 }
               },
               child: Container(
@@ -156,7 +159,7 @@ OutlineInputBorder myInputBorder() {
   //return type is OutlineInputBorder
   return const OutlineInputBorder(
     //Outline border type for TextFeild
-    borderRadius: BorderRadius.all(Radius.circular(20)),
+    borderRadius: BorderRadius.all(Radius.circular(30)),
     borderSide: BorderSide(
       color: Colors.redAccent,
       width: 3,
@@ -167,7 +170,7 @@ OutlineInputBorder myInputBorder() {
 OutlineInputBorder myFocusBorder() {
   return const OutlineInputBorder(
     borderRadius: BorderRadius.all(
-      Radius.circular(20),
+      Radius.circular(30),
     ),
     borderSide: BorderSide(
       color: Colors.greenAccent,
