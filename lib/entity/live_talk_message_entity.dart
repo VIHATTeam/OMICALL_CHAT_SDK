@@ -114,6 +114,11 @@ class LiveTalkMessageEntity {
         guestInfo: guestInfo ?? this.guestInfo,
       );
 
+  setNewReaction(List<dynamic> list) {
+    final temp = list.map((e) => Reactions.fromJson(e)).toList();
+    reactions = temp;
+  }
+
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{};
     map['created_date'] = createdDate;

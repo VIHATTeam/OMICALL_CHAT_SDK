@@ -11,6 +11,7 @@ import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 import 'create_user_form_screen.dart';
 import 'items/message_item.dart';
+import 'items/rep_message_widget.dart';
 import 'reaction_widget.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -33,6 +34,8 @@ class ChatState extends State<ChatScreen> {
   late StreamSubscription _messageSubscription;
   bool isTyping = false;
   bool isAdminOnline = false;
+  final FocusNode focusNode = FocusNode();
+  LiveTalkMessageEntity? _repMessage;
 
   @override
   void initState() {
@@ -63,11 +66,24 @@ class ChatState extends State<ChatScreen> {
           isAdminOnline = true;
         });
       }
+      if (event == "lt_reaction") {
+        LiveTalkMessageEntity? message =
+            messages.cast<LiveTalkMessageEntity?>().firstWhere(
+                  (element) => element?.id == data["msg_id"],
+                  orElse: () => null,
+                );
+        if (message != null) {
+          message.setNewReaction(data["reactions"]);
+        }
+        setState(() {});
+        return;
+      }
     });
   }
 
   @override
   void dispose() {
+    focusNode.dispose();
     _refreshController.dispose();
     _controller.dispose();
     _messageSubscription.cancel();
@@ -194,7 +210,8 @@ class ChatState extends State<ChatScreen> {
                                 ReactionWidget(
                                   callback: (content) async {
                                     EasyLoading.show();
-                                    await LiveTalkSdk.shareInstance.reactMessage(
+                                    await LiveTalkSdk.shareInstance
+                                        .actionOnMessage(
                                       content: content,
                                       id: id ?? "",
                                       action: "REACT",
@@ -226,17 +243,56 @@ class ChatState extends State<ChatScreen> {
                         },
                       );
                     },
+                    replyCallback: (id) {
+                      focusNode.requestFocus();
+                      setState(() {
+                        _repMessage = messages[index];
+                      });
+                    },
                   );
                 },
                 separatorBuilder: (context, index) {
                   return const SizedBox(
-                    height: 8,
+                    height: 12,
                   );
                 },
                 itemCount: messages.length,
               ),
             ),
           ),
+          if (_repMessage != null)
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 8,
+              ),
+              margin: const EdgeInsets.symmetric(
+                horizontal: 16,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.grey.withOpacity(0.25),
+              ),
+              child: Row(
+                children: [
+                  RepMessageItem(
+                    data: _repMessage!,
+                  ),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _repMessage = null;
+                      });
+                    },
+                    child: const Icon(
+                      Icons.cancel,
+                      size: 24,
+                      color: Colors.black,
+                    ),
+                  )
+                ],
+              ),
+            ),
           if (isTyping) ...[
             const SizedBox(
               height: 6,
@@ -269,10 +325,13 @@ class ChatState extends State<ChatScreen> {
               ),
               Expanded(
                 child: TextField(
+                  focusNode: focusNode,
                   controller: _controller,
                   decoration: InputDecoration(
-                    contentPadding:
-                        const EdgeInsets.symmetric(vertical: 2, horizontal: 12),
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 2,
+                      horizontal: 12,
+                    ),
                     prefixIcon: const Icon(Icons.cleaning_services),
                     labelText: "Input",
                     enabledBorder: myInputBorder(),
@@ -286,9 +345,20 @@ class ChatState extends State<ChatScreen> {
               GestureDetector(
                 onTap: () async {
                   EasyLoading.show();
-                  await LiveTalkSdk.shareInstance.sendMessage(
-                    message: _controller.text,
-                  );
+                  if (_repMessage != null) {
+                    await LiveTalkSdk.shareInstance.actionOnMessage(
+                      content: _controller.text,
+                      action: "QUOTE",
+                      id: _repMessage?.id ?? "",
+                    );
+                    setState(() {
+                      _repMessage = null;
+                    });
+                  } else {
+                    await LiveTalkSdk.shareInstance.sendMessage(
+                      message: _controller.text,
+                    );
+                  }
                   _controller.clear();
                   EasyLoading.dismiss();
                 },

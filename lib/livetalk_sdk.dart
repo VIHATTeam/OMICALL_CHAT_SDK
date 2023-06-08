@@ -77,12 +77,12 @@ class LiveTalkSdk {
     return await LiveTalkApi.instance.sendMessage(message: message);
   }
 
-  Future<bool> reactMessage({
+  Future<bool> actionOnMessage({
     required String content,
     required String id,
     required String action,
   }) async {
-    return await LiveTalkApi.instance.reactMessage(
+    return await LiveTalkApi.instance.actionOnMessage(
       content: content,
       id: id,
       action: action,

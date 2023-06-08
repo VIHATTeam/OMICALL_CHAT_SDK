@@ -43,10 +43,17 @@ class LiveTalkSocketManager {
     _socket!.on("message", (data) {
       final jsonData = json.decode(data);
       final detail = json.decode(jsonData["detail"]);
-      debugPrint("message event");
       _eventController.sink.add({
         "event": "message",
         "data": LiveTalkMessageEntity.fromJson(detail),
+      });
+    });
+    _socket!.on("lt_reaction", (data) {
+      final jsonData = json.decode(data);
+      final detail = json.decode(jsonData["detail"]);
+      _eventController.sink.add({
+        "event": "lt_reaction",
+        "data": detail,
       });
     });
     _socket!.on("member_join", (data) {

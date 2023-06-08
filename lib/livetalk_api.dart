@@ -88,7 +88,7 @@ class LiveTalkApi {
     return false;
   }
 
-  Future<bool> reactMessage({
+  Future<bool> actionOnMessage({
     required String content,
     required String id,
     required String action,
@@ -99,7 +99,7 @@ class LiveTalkApi {
     };
     var request = http.Request(
       'POST',
-      Uri.parse('$_baseUrl/message/sender_action'),
+      Uri.parse('$_baseUrl/guest/message/sender_action'),
     );
     request.body = json.encode({
       "content": content,
@@ -182,9 +182,7 @@ class LiveTalkApi {
     );
     request.body = json.encode({});
     request.headers.addAll(headers);
-    http.StreamedResponse response = await request.send().catchError((error) {
-      debugPrint(error.toString());
-    });
+    http.StreamedResponse response = await request.send();
     if (response.statusCode == 200) {
       final data = await response.stream.bytesToString();
       final jsonData = json.decode(data);

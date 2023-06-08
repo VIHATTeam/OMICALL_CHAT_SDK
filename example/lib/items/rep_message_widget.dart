@@ -6,32 +6,17 @@ import 'package:livetalk_sdk_example/extensions/string_extension.dart';
 import 'package:livetalk_sdk_example/image_preview.dart';
 import 'package:livetalk_sdk_example/video_preview.dart';
 
-class MessageItem extends StatelessWidget {
-  const MessageItem({
+class RepMessageItem extends StatelessWidget {
+  const RepMessageItem({
     super.key,
     required this.data,
-    this.longPress,
-    this.reactCallback,
-    this.replyCallback,
   });
 
   final LiveTalkMessageEntity data;
-  final Function(String? id)? longPress;
-  final Function(String? id)? reactCallback;
-  final Function(String? id)? replyCallback;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onLongPress: data.memberType == "guest"
-          ? () {
-              if (longPress != null) {
-                longPress!(data.id);
-              }
-            }
-          : null,
-      child: chatMessage(context),
-    );
+    return chatMessage(context);
   }
 
   Widget chatMessage(BuildContext context) {
@@ -44,39 +29,13 @@ class MessageItem extends StatelessWidget {
             ? MainAxisAlignment.start
             : MainAxisAlignment.end,
         children: [
-          if (data.memberType == "guest") ...[
-            replyWidget,
-            const SizedBox(width: 6,),
-            reactWidget,
-            const SizedBox(
-              width: 6,
-            ),
-          ],
           fileWidget,
-          if (data.memberType != "guest") ...[
-            const SizedBox(
-              width: 6,
-            ),
-            reactWidget,
-            const SizedBox(width: 6,),
-            replyWidget,
-          ],
         ],
       );
     }
     return Row(
-      mainAxisAlignment: data.memberType != "guest"
-          ? MainAxisAlignment.start
-          : MainAxisAlignment.end,
+      mainAxisAlignment:MainAxisAlignment.start,
       children: [
-        if (data.memberType == "guest") ...[
-          replyWidget,
-          const SizedBox(width: 6,),
-          reactWidget,
-          const SizedBox(
-            width: 6,
-          ),
-        ],
         Stack(
           clipBehavior: Clip.none,
           children: [
@@ -97,7 +56,7 @@ class MessageItem extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 16,
                   color:
-                      data.memberType != "guest" ? Colors.black : Colors.white,
+                  data.memberType != "guest" ? Colors.black : Colors.white,
                 ),
               ),
             ),
@@ -125,22 +84,12 @@ class MessageItem extends StatelessWidget {
                       );
                     },
                     itemCount:
-                        data.reactions!.length > 5 ? 5 : data.reactions!.length,
+                    data.reactions!.length > 5 ? 5 : data.reactions!.length,
                   ),
                 ),
               )
           ],
         ),
-        if (data.memberType != "guest") ...[
-          const SizedBox(
-            width: 6,
-          ),
-          reactWidget,
-          const SizedBox(
-            width: 6,
-          ),
-          replyWidget
-        ],
       ],
     );
   }
@@ -273,36 +222,6 @@ class MessageItem extends StatelessWidget {
         color: Colors.grey,
         fontSize: 13,
       ),
-    );
-  }
-
-  Widget get reactWidget {
-    return GestureDetector(
-      child: const Icon(
-        Icons.account_circle,
-        color: Colors.grey,
-        size: 24,
-      ),
-      onTap: () {
-        if (reactCallback != null) {
-          reactCallback!(data.id);
-        }
-      },
-    );
-  }
-
-  Widget get replyWidget {
-    return GestureDetector(
-      child: const Icon(
-        Icons.reply,
-        color: Colors.grey,
-        size: 24,
-      ),
-      onTap: () {
-        if (replyCallback != null) {
-          replyCallback!(data.id);
-        }
-      },
     );
   }
 }
