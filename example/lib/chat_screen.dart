@@ -11,6 +11,7 @@ import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 import 'create_user_form_screen.dart';
 import 'items/message_item.dart';
+import 'reaction_widget.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -174,6 +175,55 @@ class ChatState extends State<ChatScreen> {
                             },
                           ),
                         ),
+                      );
+                    },
+                    reactCallback: (id) {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return Dialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(6),
+                            ), //this right here
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const SizedBox(
+                                  height: 12,
+                                ),
+                                ReactionWidget(
+                                  callback: (content) async {
+                                    EasyLoading.show();
+                                    await LiveTalkSdk.shareInstance.reactMessage(
+                                      content: content,
+                                      id: id ?? "",
+                                      action: "REACT",
+                                    );
+                                    EasyLoading.dismiss();
+                                  },
+                                ),
+                                const SizedBox(
+                                  height: 12,
+                                ),
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                  },
+                                  child: const Text(
+                                    "Close",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.blue,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(
+                                  height: 12,
+                                ),
+                              ],
+                            ),
+                          );
+                        },
                       );
                     },
                   );

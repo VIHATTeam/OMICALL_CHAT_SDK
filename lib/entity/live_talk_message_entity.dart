@@ -30,6 +30,7 @@ class LiveTalkMessageEntity {
     this.uuid,
     this.guestInfo,
     this.multimedias,
+    this.reactions,
   });
 
   LiveTalkMessageEntity.fromJson(dynamic json) {
@@ -55,6 +56,12 @@ class LiveTalkMessageEntity {
         multimedias?.add(Multimedias.fromJson(v));
       });
     }
+    if (json['reactions'] != null) {
+      reactions = [];
+      json['reactions'].forEach((v) {
+        reactions?.add(Reactions.fromJson(v));
+      });
+    }
   }
 
   int? createdDate;
@@ -72,6 +79,7 @@ class LiveTalkMessageEntity {
   String? uuid;
   GuestInfo? guestInfo;
   List<Multimedias>? multimedias;
+  List<Reactions>? reactions;
 
   LiveTalkMessageEntity copyWith({
     int? createdDate,
@@ -126,6 +134,9 @@ class LiveTalkMessageEntity {
     }
     if (multimedias != null) {
       map['multimedias'] = multimedias?.map((v) => v.toJson()).toList();
+    }
+    if (reactions != null) {
+      map['reactions'] = reactions?.map((v) => v.toJson()).toList();
     }
     return map;
   }
@@ -331,6 +342,33 @@ class Multimedias {
     map['url'] = url;
     map['content_type'] = contentType;
     map['size'] = size;
+    return map;
+  }
+}
+
+
+/// reaction : "🙃"
+class Reactions {
+  Reactions({
+    this.reaction,
+  });
+
+  Reactions.fromJson(dynamic json) {
+    reaction = json['reaction'];
+  }
+
+  String? reaction;
+
+  Reactions copyWith({
+    String? reaction,
+  }) =>
+      Reactions(
+        reaction: reaction ?? this.reaction,
+      );
+
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{};
+    map['reaction'] = reaction;
     return map;
   }
 }

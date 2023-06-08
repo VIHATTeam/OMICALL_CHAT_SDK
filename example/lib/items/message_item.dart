@@ -11,19 +11,23 @@ class MessageItem extends StatelessWidget {
     super.key,
     required this.data,
     this.longPress,
+    this.reactCallback,
   });
 
   final LiveTalkMessageEntity data;
   final Function(String? id)? longPress;
+  final Function(String? id)? reactCallback;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onLongPress: data.memberType == "guest" ? () {
-        if (longPress != null) {
-          longPress!(data.id);
-        }
-      } : null,
+      onLongPress: data.memberType == "guest"
+          ? () {
+              if (longPress != null) {
+                longPress!(data.id);
+              }
+            }
+          : null,
       child: chatMessage(context),
     );
   }
@@ -47,26 +51,94 @@ class MessageItem extends StatelessWidget {
           ? MainAxisAlignment.start
           : MainAxisAlignment.end,
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 8,
-            vertical: 6,
-          ),
-          constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width / 3 * 2,
-          ),
-          decoration: BoxDecoration(
-            color: data.memberType != "guest" ? Colors.grey : Colors.blue,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            data.content ?? "",
-            style: TextStyle(
-              fontSize: 16,
-              color: data.memberType != "guest" ? Colors.black : Colors.white,
+        if (data.memberType == "guest") ...[
+          GestureDetector(
+            child: const Icon(
+              Icons.account_circle,
+              color: Colors.grey,
+              size: 24,
             ),
+            onTap: () {
+              if (reactCallback != null) {
+                reactCallback!(data.id);
+              }
+            },
           ),
+          const SizedBox(
+            width: 6,
+          ),
+        ],
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 6,
+              ),
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width / 3 * 2,
+              ),
+              decoration: BoxDecoration(
+                color: data.memberType != "guest" ? Colors.grey : Colors.blue,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                data.content ?? "",
+                style: TextStyle(
+                  fontSize: 16,
+                  color:
+                      data.memberType != "guest" ? Colors.black : Colors.white,
+                ),
+              ),
+            ),
+            if (data.reactions?.isNotEmpty == true)
+              Positioned(
+                bottom: -8,
+                left: 0,
+                right: 0,
+                child: SizedBox(
+                  height: 16,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemBuilder: (context, index) {
+                      return Text(
+                        data.reactions![index].reaction ?? "",
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 12,
+                        ),
+                      );
+                    },
+                    separatorBuilder: (context, index) {
+                      return const SizedBox(
+                        width: 1,
+                      );
+                    },
+                    itemCount:
+                        data.reactions!.length > 5 ? 5 : data.reactions!.length,
+                  ),
+                ),
+              )
+          ],
         ),
+        if (data.memberType != "guest") ...[
+          const SizedBox(
+            width: 6,
+          ),
+          GestureDetector(
+            child: const Icon(
+              Icons.account_circle,
+              color: Colors.grey,
+              size: 24,
+            ),
+            onTap: () {
+              if (reactCallback != null) {
+                reactCallback!(data.id);
+              }
+            },
+          ),
+        ],
       ],
     );
   }
@@ -173,7 +245,7 @@ class MessageItem extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            "${DateTimeHelper.timestampToString(data.lastUpdatedDate ?? 0)} Khách đã để lại thông tin",
+            "${DateTimeHelper.timestampToString(data.lastUpdatedDate ?? 0)} Bạn đã để lại thông tin",
             style: const TextStyle(
               color: Colors.grey,
               fontSize: 13,

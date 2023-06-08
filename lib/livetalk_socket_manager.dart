@@ -36,7 +36,9 @@ class LiveTalkSocketManager {
     );
     _socket!.connect();
     _socket!.onConnect((data) {
-      debugPrint("connected");
+      _eventController.sink.add({
+        "event": "socket_connected",
+      });
     });
     _socket!.on("message", (data) {
       final jsonData = json.decode(data);
@@ -75,7 +77,9 @@ class LiveTalkSocketManager {
       });
     });
     _socket!.onError((data) {
-      debugPrint(data.toString());
+      _eventController.sink.add({
+        "event": "socket_connect_error",
+      });
     });
   }
 

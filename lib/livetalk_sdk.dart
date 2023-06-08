@@ -9,6 +9,7 @@ import 'entity/live_talk_message_entity.dart';
 class LiveTalkSdk {
   final String domainPbx;
   static LiveTalkSdk? _instance;
+
   static LiveTalkSdk get shareInstance => _instance!;
   final String fileUrl = 'https://cdn.omicrm.com/crm/';
 
@@ -17,7 +18,8 @@ class LiveTalkSdk {
     _instance = this;
   }
 
-  Stream<dynamic> get eventStream => LiveTalkSocketManager.shareInstance.eventStream;
+  Stream<dynamic> get eventStream =>
+      LiveTalkSocketManager.shareInstance.eventStream;
 
   Future<String?> createRoom({
     required String phone,
@@ -73,6 +75,18 @@ class LiveTalkSdk {
 
   Future<bool> sendMessage({required String message}) async {
     return await LiveTalkApi.instance.sendMessage(message: message);
+  }
+
+  Future<bool> reactMessage({
+    required String content,
+    required String id,
+    required String action,
+  }) async {
+    return await LiveTalkApi.instance.reactMessage(
+      content: content,
+      id: id,
+      action: action,
+    );
   }
 
   Future<bool> removeMessage({required String id}) async {

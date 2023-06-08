@@ -88,6 +88,37 @@ class LiveTalkApi {
     return false;
   }
 
+  Future<bool> reactMessage({
+    required String content,
+    required String id,
+    required String action,
+  }) async {
+    var headers = {
+      'Content-Type': 'application/json',
+      'Authorization': "Bearer ${_sdkInfo!["access_token"] as String}",
+    };
+    var request = http.Request(
+      'POST',
+      Uri.parse('$_baseUrl/message/sender_action'),
+    );
+    request.body = json.encode({
+      "content": content,
+      "uuid": _sdkInfo!["uuid"],
+      "ref_id": id,
+      "room_id": _sdkInfo!["room_id"],
+      "action": action,
+    });
+    request.headers.addAll(headers);
+    http.StreamedResponse response = await request.send();
+    if (response.statusCode == 200) {
+      final data = await response.stream.bytesToString();
+      final jsonData = json.decode(data);
+      debugPrint(jsonData.toString());
+      return true;
+    }
+    return false;
+  }
+
   Future<bool> sendFiles({required List<String> paths}) async {
     var headers = {
       'Content-Type': 'multipart/form-data',
@@ -134,8 +165,8 @@ class LiveTalkApi {
       final data = await response.stream.bytesToString();
       final jsonData = json.decode(data);
       final items = jsonData["payload"]["items"] as List;
-      debugPrint(items.toString());
-      return List.generate(items.length, (index) => LiveTalkMessageEntity.fromJson(items[index]));
+      return List.generate(items.length,
+          (index) => LiveTalkMessageEntity.fromJson(items[index]));
     }
     return [];
   }
@@ -149,8 +180,7 @@ class LiveTalkApi {
       'DELETE',
       Uri.parse('$_baseUrl/user/message/remove/$id'),
     );
-    request.body = json.encode({
-    });
+    request.body = json.encode({});
     request.headers.addAll(headers);
     http.StreamedResponse response = await request.send().catchError((error) {
       debugPrint(error.toString());
