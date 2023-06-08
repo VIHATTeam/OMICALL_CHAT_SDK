@@ -4,6 +4,7 @@ import 'package:livetalk_sdk_example/audio_preview.dart';
 import 'package:livetalk_sdk_example/datetime_helper.dart';
 import 'package:livetalk_sdk_example/extensions/string_extension.dart';
 import 'package:livetalk_sdk_example/image_preview.dart';
+import 'package:livetalk_sdk_example/items/rep_message_widget.dart';
 import 'package:livetalk_sdk_example/video_preview.dart';
 
 class MessageItem extends StatelessWidget {
@@ -43,6 +44,7 @@ class MessageItem extends StatelessWidget {
         mainAxisAlignment: data.memberType != "guest"
             ? MainAxisAlignment.start
             : MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (data.memberType == "guest") ...[
             replyWidget,
@@ -52,7 +54,13 @@ class MessageItem extends StatelessWidget {
               width: 6,
             ),
           ],
-          fileWidget,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              fileWidget,
+              reactionWidget
+            ],
+          ),
           if (data.memberType != "guest") ...[
             const SizedBox(
               width: 6,
@@ -68,6 +76,7 @@ class MessageItem extends StatelessWidget {
       mainAxisAlignment: data.memberType != "guest"
           ? MainAxisAlignment.start
           : MainAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         if (data.memberType == "guest") ...[
           replyWidget,
@@ -77,9 +86,21 @@ class MessageItem extends StatelessWidget {
             width: 6,
           ),
         ],
-        Stack(
-          clipBehavior: Clip.none,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (data.quoteMessage != null)...[
+              Row(
+                children: [
+                  RepMessageItem(data: data.quoteMessage!),
+                  const SizedBox(width: 6,),
+                  const Text("Rep by", style: TextStyle(
+                    fontSize: 12,
+                  ),)
+                ],
+              ),
+              const SizedBox(height: 6,),
+            ],
             Container(
               padding: const EdgeInsets.symmetric(
                 horizontal: 8,
@@ -92,43 +113,21 @@ class MessageItem extends StatelessWidget {
                 color: data.memberType != "guest" ? Colors.grey : Colors.blue,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Text(
-                data.content ?? "",
-                style: TextStyle(
-                  fontSize: 16,
-                  color:
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    data.content ?? "",
+                    style: TextStyle(
+                      fontSize: 16,
+                      color:
                       data.memberType != "guest" ? Colors.black : Colors.white,
-                ),
+                    ),
+                  ),
+                  reactionWidget
+                ],
               ),
             ),
-            if (data.reactions?.isNotEmpty == true)
-              Positioned(
-                bottom: -8,
-                left: 0,
-                right: 0,
-                child: SizedBox(
-                  height: 16,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemBuilder: (context, index) {
-                      return Text(
-                        data.reactions![index].reaction ?? "",
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 12,
-                        ),
-                      );
-                    },
-                    separatorBuilder: (context, index) {
-                      return const SizedBox(
-                        width: 1,
-                      );
-                    },
-                    itemCount:
-                        data.reactions!.length > 5 ? 5 : data.reactions!.length,
-                  ),
-                ),
-              )
           ],
         ),
         if (data.memberType != "guest") ...[
@@ -304,5 +303,34 @@ class MessageItem extends StatelessWidget {
         }
       },
     );
+  }
+
+  Widget get reactionWidget {
+    if (data.reactions?.isNotEmpty == true) {
+      return SizedBox(
+        height: 20,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          shrinkWrap: true,
+          itemBuilder: (context, index) {
+            return Text(
+              data.reactions![index].reaction ?? "",
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 14,
+              ),
+            );
+          },
+          separatorBuilder: (context, index) {
+            return const SizedBox(
+              width: 1,
+            );
+          },
+          itemCount:
+          data.reactions!.length > 5 ? 5 : data.reactions!.length,
+        ),
+      );
+    }
+    return const SizedBox();
   }
 }

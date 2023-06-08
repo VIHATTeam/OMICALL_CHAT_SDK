@@ -73,8 +73,11 @@ class LiveTalkSdk {
     return result;
   }
 
-  Future<bool> sendMessage({required String message}) async {
-    return await LiveTalkApi.instance.sendMessage(message: message);
+  Future<bool> sendMessage({required String message, String? quoteId}) async {
+    return await LiveTalkApi.instance.sendMessage(
+      message: message,
+      quoteId: quoteId,
+    );
   }
 
   Future<bool> actionOnMessage({

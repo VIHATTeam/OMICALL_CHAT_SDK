@@ -63,7 +63,10 @@ class LiveTalkApi {
     return null;
   }
 
-  Future<bool> sendMessage({required String message}) async {
+  Future<bool> sendMessage({
+    required String message,
+    String? quoteId,
+  }) async {
     var headers = {
       'Content-Type': 'application/json',
       'Authorization': "Bearer ${_sdkInfo!["access_token"] as String}",
@@ -72,11 +75,15 @@ class LiveTalkApi {
       'POST',
       Uri.parse('$_baseUrl/message/guest_send_message'),
     );
-    request.body = json.encode({
+    final body = {
       "content": message,
       "uuid": _sdkInfo!["uuid"],
       "room_id": _sdkInfo!["room_id"],
-    });
+    };
+    if (quoteId != null) {
+      body["quote_id"] = quoteId;
+    }
+    request.body = json.encode(body);
     request.headers.addAll(headers);
     http.StreamedResponse response = await request.send();
     if (response.statusCode == 200) {
@@ -177,10 +184,13 @@ class LiveTalkApi {
       'Authorization': "Bearer ${_sdkInfo!["access_token"] as String}",
     };
     var request = http.Request(
-      'DELETE',
-      Uri.parse('$_baseUrl/user/message/remove/$id'),
+      'POST',
+      Uri.parse('$_baseUrl/guest/message/remove'),
     );
-    request.body = json.encode({});
+    request.body = json.encode({
+      "room_id": _sdkInfo!["room_id"] ?? "",
+      "message_id": id,
+    });
     request.headers.addAll(headers);
     http.StreamedResponse response = await request.send();
     if (response.statusCode == 200) {

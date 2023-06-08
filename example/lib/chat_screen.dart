@@ -78,6 +78,13 @@ class ChatState extends State<ChatScreen> {
         setState(() {});
         return;
       }
+      if (event == "remove_message") {
+        final msgId = data["msg_id"];
+        setState(() {
+          messages.removeWhere((element) => element.id == msgId);
+        });
+        return;
+      }
     });
   }
 
@@ -345,19 +352,14 @@ class ChatState extends State<ChatScreen> {
               GestureDetector(
                 onTap: () async {
                   EasyLoading.show();
+                  await LiveTalkSdk.shareInstance.sendMessage(
+                    message: _controller.text,
+                    quoteId: _repMessage?.id
+                  );
                   if (_repMessage != null) {
-                    await LiveTalkSdk.shareInstance.actionOnMessage(
-                      content: _controller.text,
-                      action: "QUOTE",
-                      id: _repMessage?.id ?? "",
-                    );
                     setState(() {
                       _repMessage = null;
                     });
-                  } else {
-                    await LiveTalkSdk.shareInstance.sendMessage(
-                      message: _controller.text,
-                    );
                   }
                   _controller.clear();
                   EasyLoading.dismiss();

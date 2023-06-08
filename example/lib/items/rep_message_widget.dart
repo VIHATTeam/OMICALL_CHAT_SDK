@@ -33,63 +33,57 @@ class RepMessageItem extends StatelessWidget {
         ],
       );
     }
-    return Row(
-      mainAxisAlignment:MainAxisAlignment.start,
+    return Stack(
+      clipBehavior: Clip.none,
       children: [
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 8,
-                vertical: 6,
-              ),
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width / 3 * 2,
-              ),
-              decoration: BoxDecoration(
-                color: data.memberType != "guest" ? Colors.grey : Colors.blue,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                data.content ?? "",
-                style: TextStyle(
-                  fontSize: 16,
-                  color:
-                  data.memberType != "guest" ? Colors.black : Colors.white,
-                ),
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 8,
+            vertical: 6,
+          ),
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width / 3 * 2,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.grey,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            data.content ?? "",
+            style: TextStyle(
+              fontSize: 16,
+              color: data.memberType != "guest" ? Colors.black : Colors.white,
+            ),
+          ),
+        ),
+        if (data.reactions?.isNotEmpty == true)
+          Positioned(
+            bottom: -8,
+            left: 0,
+            right: 0,
+            child: SizedBox(
+              height: 16,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemBuilder: (context, index) {
+                  return Text(
+                    data.reactions![index].reaction ?? "",
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 12,
+                    ),
+                  );
+                },
+                separatorBuilder: (context, index) {
+                  return const SizedBox(
+                    width: 1,
+                  );
+                },
+                itemCount:
+                    data.reactions!.length > 5 ? 5 : data.reactions!.length,
               ),
             ),
-            if (data.reactions?.isNotEmpty == true)
-              Positioned(
-                bottom: -8,
-                left: 0,
-                right: 0,
-                child: SizedBox(
-                  height: 16,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemBuilder: (context, index) {
-                      return Text(
-                        data.reactions![index].reaction ?? "",
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 12,
-                        ),
-                      );
-                    },
-                    separatorBuilder: (context, index) {
-                      return const SizedBox(
-                        width: 1,
-                      );
-                    },
-                    itemCount:
-                    data.reactions!.length > 5 ? 5 : data.reactions!.length,
-                  ),
-                ),
-              )
-          ],
-        ),
+          )
       ],
     );
   }
@@ -142,7 +136,7 @@ class RepMessageItem extends StatelessWidget {
             },
             child: Container(
               decoration: BoxDecoration(
-                color: data.memberType != "guest" ? Colors.grey : Colors.blue,
+                color: Colors.grey,
                 borderRadius: BorderRadius.circular(8),
               ),
               padding: const EdgeInsets.symmetric(
@@ -151,12 +145,10 @@ class RepMessageItem extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.file_present_rounded,
                     size: 24,
-                    color: data.memberType != "guest"
-                        ? Colors.black
-                        : Colors.white,
+                    color: Colors.black,
                   ),
                   const SizedBox(
                     width: 8,
@@ -164,11 +156,9 @@ class RepMessageItem extends StatelessWidget {
                   Expanded(
                     child: Text(
                       item.name ?? "",
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 12,
-                        color: data.memberType != "guest"
-                            ? Colors.black
-                            : Colors.white,
+                        color: Colors.black,
                         decoration: TextDecoration.underline,
                       ),
                     ),

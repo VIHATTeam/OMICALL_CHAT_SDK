@@ -31,6 +31,7 @@ class LiveTalkMessageEntity {
     this.guestInfo,
     this.multimedias,
     this.reactions,
+    this.quoteMessage,
   });
 
   LiveTalkMessageEntity.fromJson(dynamic json) {
@@ -62,6 +63,9 @@ class LiveTalkMessageEntity {
         reactions?.add(Reactions.fromJson(v));
       });
     }
+    if (json["quote_message"] != null) {
+      quoteMessage = LiveTalkMessageEntity.fromJson(json["quote_message"]);
+    }
   }
 
   int? createdDate;
@@ -80,6 +84,7 @@ class LiveTalkMessageEntity {
   GuestInfo? guestInfo;
   List<Multimedias>? multimedias;
   List<Reactions>? reactions;
+  LiveTalkMessageEntity? quoteMessage;
 
   LiveTalkMessageEntity copyWith({
     int? createdDate,
@@ -96,6 +101,7 @@ class LiveTalkMessageEntity {
     String? receivingGroupId,
     String? uuid,
     GuestInfo? guestInfo,
+    LiveTalkMessageEntity? quoteMessage,
   }) =>
       LiveTalkMessageEntity(
         createdDate: createdDate ?? this.createdDate,
@@ -112,6 +118,7 @@ class LiveTalkMessageEntity {
         receivingGroupId: receivingGroupId ?? this.receivingGroupId,
         uuid: uuid ?? this.uuid,
         guestInfo: guestInfo ?? this.guestInfo,
+        quoteMessage: quoteMessage ?? this.quoteMessage,
       );
 
   setNewReaction(List<dynamic> list) {
@@ -142,6 +149,9 @@ class LiveTalkMessageEntity {
     }
     if (reactions != null) {
       map['reactions'] = reactions?.map((v) => v.toJson()).toList();
+    }
+    if (quoteMessage != null) {
+      map['quote_message'] = quoteMessage?.toJson();
     }
     return map;
   }
