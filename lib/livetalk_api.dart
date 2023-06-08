@@ -139,4 +139,28 @@ class LiveTalkApi {
     }
     return [];
   }
+
+  Future<bool> removeMessage({required String id}) async {
+    var headers = {
+      'Content-Type': 'application/json',
+      'Authorization': "Bearer ${_sdkInfo!["access_token"] as String}",
+    };
+    var request = http.Request(
+      'DELETE',
+      Uri.parse('$_baseUrl/user/message/remove/$id'),
+    );
+    request.body = json.encode({
+    });
+    request.headers.addAll(headers);
+    http.StreamedResponse response = await request.send().catchError((error) {
+      debugPrint(error.toString());
+    });
+    if (response.statusCode == 200) {
+      final data = await response.stream.bytesToString();
+      final jsonData = json.decode(data);
+      debugPrint(jsonData.toString());
+      return true;
+    }
+    return false;
+  }
 }

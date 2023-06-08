@@ -30,6 +30,8 @@ class ChatState extends State<ChatScreen> {
   List<LiveTalkMessageEntity> messages = [];
   bool isLoading = false;
   late StreamSubscription _messageSubscription;
+  bool isTyping = false;
+  bool isAdminOnline = false;
 
   @override
   void initState() {
@@ -42,6 +44,22 @@ class ChatState extends State<ChatScreen> {
       if (event == "message") {
         setState(() {
           messages.insert(0, data as LiveTalkMessageEntity);
+        });
+        return;
+      }
+      if (event == "someone_typing") {
+        setState(() {
+          isTyping = data["isTyping"];
+        });
+      }
+      if (event == "member_disconnect") {
+        setState(() {
+          isAdminOnline = false;
+        });
+      }
+      if (event == "member_connect") {
+        setState(() {
+          isAdminOnline = true;
         });
       }
     });
@@ -93,6 +111,19 @@ class ChatState extends State<ChatScreen> {
       appBar: AppBar(
         title: const Text("Chat"),
         automaticallyImplyLeading: false,
+        actions: [
+          Center(
+            child: Container(
+              margin: const EdgeInsets.only(right: 16),
+              width: 16,
+              height: 16,
+              decoration: BoxDecoration(
+                color: isAdminOnline ? Colors.green : Colors.grey,
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          )
+        ],
       ),
       body: Column(
         children: [
@@ -112,6 +143,39 @@ class ChatState extends State<ChatScreen> {
                 itemBuilder: (context, index) {
                   return MessageItem(
                     data: messages[index],
+                    longPress: (id) {
+                      if (id == null) {
+                        return;
+                      }
+                      showCupertinoModalPopup<void>(
+                        context: context,
+                        builder: (BuildContext context) => CupertinoActionSheet(
+                          actions: <CupertinoActionSheetAction>[
+                            CupertinoActionSheetAction(
+                              child: const Text('Delete'),
+                              onPressed: () async {
+                                Navigator.pop(context);
+                                EasyLoading.show();
+                                await LiveTalkSdk.shareInstance
+                                    .removeMessage(id: id);
+                                EasyLoading.dismiss();
+                                setState(() {
+                                  messages.removeWhere(
+                                      (element) => element.id == id);
+                                });
+                                //delete
+                              },
+                            ),
+                          ],
+                          cancelButton: CupertinoActionSheetAction(
+                            child: const Text('Cancel'),
+                            onPressed: () async {
+                              Navigator.pop(context);
+                            },
+                          ),
+                        ),
+                      );
+                    },
                   );
                 },
                 separatorBuilder: (context, index) {
@@ -123,6 +187,28 @@ class ChatState extends State<ChatScreen> {
               ),
             ),
           ),
+          if (isTyping) ...[
+            const SizedBox(
+              height: 6,
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                margin: const EdgeInsets.only(left: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 2,
+                ),
+                child: const Text(
+                  "Admin đang trả lời ...",
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            )
+          ],
           const SizedBox(
             height: 6,
           ),
@@ -186,7 +272,9 @@ class ChatState extends State<ChatScreen> {
                   ),
                 ),
               ),
-              const SizedBox(width: 12,),
+              const SizedBox(
+                width: 12,
+              ),
               GestureDetector(
                 onTap: () async {
                   showCupertinoModalPopup<void>(
@@ -197,10 +285,12 @@ class ChatState extends State<ChatScreen> {
                           child: const Text('Files'),
                           onPressed: () async {
                             Navigator.pop(context);
-                            FilePickerResult? result = await FilePicker.platform.pickFiles(allowMultiple: true);
+                            FilePickerResult? result = await FilePicker.platform
+                                .pickFiles(allowMultiple: true);
                             if (result != null) {
                               EasyLoading.show();
-                              await LiveTalkSdk.shareInstance.sendFiles(paths: result.paths.cast<String>());
+                              await LiveTalkSdk.shareInstance.sendFiles(
+                                  paths: result.paths.cast<String>());
                               EasyLoading.dismiss();
                             }
                           },
@@ -216,7 +306,8 @@ class ChatState extends State<ChatScreen> {
                             );
                             if (res?.isNotEmpty == true) {
                               EasyLoading.show();
-                              await LiveTalkSdk.shareInstance.sendFiles(paths: res!.map((e) => e.path).toList());
+                              await LiveTalkSdk.shareInstance.sendFiles(
+                                  paths: res!.map((e) => e.path).toList());
                               EasyLoading.dismiss();
                             }
                           },

@@ -75,6 +75,10 @@ class LiveTalkSdk {
     return await LiveTalkApi.instance.sendMessage(message: message);
   }
 
+  Future<bool> removeMessage({required String id}) async {
+    return await LiveTalkApi.instance.removeMessage(id: id);
+  }
+
   Future<bool> sendFiles({required List<String> paths}) async {
     return await LiveTalkApi.instance.sendFiles(paths: paths);
   }

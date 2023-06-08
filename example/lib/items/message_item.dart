@@ -10,12 +10,25 @@ class MessageItem extends StatelessWidget {
   const MessageItem({
     super.key,
     required this.data,
+    this.longPress,
   });
 
   final LiveTalkMessageEntity data;
+  final Function(String? id)? longPress;
 
   @override
   Widget build(BuildContext context) {
+    return GestureDetector(
+      onLongPress: data.memberType == "guest" ? () {
+        if (longPress != null) {
+          longPress!(data.id);
+        }
+      } : null,
+      child: chatMessage(context),
+    );
+  }
+
+  Widget chatMessage(BuildContext context) {
     if (data.memberType == "system") {
       return systemMessage;
     }

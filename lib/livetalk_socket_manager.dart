@@ -41,9 +41,37 @@ class LiveTalkSocketManager {
     _socket!.on("message", (data) {
       final jsonData = json.decode(data);
       final detail = json.decode(jsonData["detail"]);
+      debugPrint("message event");
       _eventController.sink.add({
         "event": "message",
         "data": LiveTalkMessageEntity.fromJson(detail),
+      });
+    });
+    _socket!.on("member_join", (data) {
+      debugPrint("member_join event");
+    });
+    _socket!.on("member_connect", (data) {
+      final jsonData = json.decode(data);
+      _eventController.sink.add({
+        "event": "member_connect",
+        "data": jsonData,
+      });
+    });
+    _socket!.on("member_disconnect", (data) {
+      final jsonData = json.decode(data);
+      _eventController.sink.add({
+        "event": "member_disconnect",
+        "data": jsonData,
+      });
+    });
+    _socket!.on("new_member", (data) {
+      debugPrint("new_member event");
+    });
+    _socket!.on("someone_typing", (data) {
+      final jsonData = json.decode(data);
+      _eventController.sink.add({
+        "event": "someone_typing",
+        "data": jsonData,
       });
     });
     _socket!.onError((data) {
