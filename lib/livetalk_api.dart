@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:livetalk_sdk/entity/live_talk_room_entity.dart';
 import 'package:livetalk_sdk/entity/livetalk_error.dart';
 import 'package:livetalk_sdk/livetalk_file_utils.dart';
 
@@ -79,6 +80,39 @@ class LiveTalkApi {
         _sdkInfo!["access_token"] = payload["login_token"]["access_token"];
         _sdkInfo!["refresh_token"] = payload["login_token"]["refresh_token"];
         return payload["conversation"]["_id"];
+      }
+      return null;
+    } catch (error) {
+      rethrow;
+    }
+  }
+
+  Future<LiveTalkRoomEntity?> getCurrentRoom() async {
+    try {
+      if (sdkInfo == null) {
+        throw LiveTalkError(message: {"message": "empty_info"});
+      }
+      var headers = {
+        'Content-Type': 'application/json',
+        'Authorization': "Bearer ${_sdkInfo!["access_token"] as String}",
+      };
+      var request = http.Request(
+        'GET',
+        Uri.parse('$_baseUrl//guest/room/${_sdkInfo!["room_id"]}'),
+      );
+      request.headers.addAll(headers);
+      http.StreamedResponse response = await request.send();
+      if ((response.statusCode ~/ 100) > 2) {
+        throw LiveTalkError(message: {"message": response.reasonPhrase});
+      }
+      if (response.statusCode == 200) {
+        final data = await response.stream.bytesToString();
+        final jsonData = json.decode(data);
+        if (jsonData["status_code"] == -9999) {
+          throw LiveTalkError(message: jsonData);
+        }
+        final payload = jsonData["payload"];
+        return LiveTalkRoomEntity.fromJson(payload);
       }
       return null;
     } catch (error) {

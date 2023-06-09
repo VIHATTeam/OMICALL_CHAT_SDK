@@ -38,10 +38,11 @@ class ChatState extends State<ChatScreen> {
   bool isAdminOnline = false;
   final FocusNode focusNode = FocusNode();
   LiveTalkMessageEntity? _repMessage;
+  String? title;
 
   @override
   void initState() {
-    getMessageHistory();
+    initData();
     super.initState();
     _messageSubscription =
         LiveTalkSdk.shareInstance.eventStream.listen((result) {
@@ -57,6 +58,9 @@ class ChatState extends State<ChatScreen> {
         setState(() {
           isTyping = data["isTyping"];
         });
+      }
+      if (event == "member_join") {
+        initData();
       }
       if (event == "member_disconnect") {
         setState(() {
@@ -88,6 +92,34 @@ class ChatState extends State<ChatScreen> {
         return;
       }
     });
+  }
+
+  Future<void> initData() async {
+    try {
+      EasyLoading.show();
+      final currentRoom = await LiveTalkSdk.shareInstance.getCurrentRoom();
+      if (currentRoom == null) {
+        EasyLoading.dismiss();
+        return;
+      }
+      if (currentRoom.hasMember == true && currentRoom.members?.isNotEmpty == true) {
+        final member = currentRoom.members!.first;
+        title = member.fullName;
+        isAdminOnline = member.status == "online";
+      } else {
+        title = "Wait accept";
+      }
+      await getMessageHistory();
+      EasyLoading.dismiss();
+    } catch (e) {
+      if (e is LiveTalkError) {
+        EasyLoading.dismiss();
+        showCustomDialog(
+          context: context,
+          message: e.message["message"],
+        );
+      }
+    }
   }
 
   @override
@@ -135,7 +167,7 @@ class ChatState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Chat"),
+        title: Text(title ?? ""),
         automaticallyImplyLeading: false,
         actions: [
           Center(

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:livetalk_sdk/entity/live_talk_room_entity.dart';
 import 'package:livetalk_sdk/entity/livetalk_error.dart';
 import 'package:livetalk_sdk/livetalk_api.dart';
 import 'package:livetalk_sdk/livetalk_socket_manager.dart';
@@ -76,6 +77,10 @@ class LiveTalkSdk {
     } catch (error) {
       rethrow;
     }
+  }
+
+  Future<LiveTalkRoomEntity?> getCurrentRoom() async {
+    return await LiveTalkApi.instance.getCurrentRoom();
   }
 
   Future<bool> sendMessage({required String message, String? quoteId}) async {
