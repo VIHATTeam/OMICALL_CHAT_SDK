@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:livetalk_sdk/livetalk_file_utils.dart';
 import 'package:livetalk_sdk/livetalk_string_utils.dart';
@@ -227,7 +228,12 @@ class LiveTalkApi {
       "room_id": _sdkInfo!["room_id"] ?? "",
     });
     request.headers.addAll(headers);
-    http.StreamedResponse response = await request.send();
+    http.StreamedResponse response = await request.send().timeout(
+      const Duration(seconds: 600),
+      onTimeout: () {
+        throw throw LiveTalkError(message: "timeout");
+      },
+    );
     if ((response.statusCode ~/ 100) > 2) {
       throw LiveTalkError(message: {"message": response.reasonPhrase});
     }
@@ -316,8 +322,7 @@ class LiveTalkApi {
       'GET',
       Uri.parse('$_baseUrl/geo'),
     );
-    request.body = json.encode({
-    });
+    request.body = json.encode({});
     request.headers.addAll(headers);
     http.StreamedResponse response = await request.send();
     if ((response.statusCode ~/ 100) > 2) {

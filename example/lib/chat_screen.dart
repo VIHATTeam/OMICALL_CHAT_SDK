@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
@@ -477,6 +478,7 @@ class ChatState extends State<ChatScreen> {
                               count: 3,
                               pickType: PickType.all,
                               maxSize: 512,
+                              quality: Platform.isAndroid ? 0.5 : 1,
                             );
                             if (res?.isNotEmpty == true) {
                               EasyLoading.show();
