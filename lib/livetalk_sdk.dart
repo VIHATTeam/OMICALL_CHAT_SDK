@@ -1,8 +1,9 @@
 import 'dart:async';
 
+import 'package:livetalk_sdk/entity/livetalk_error.dart';
 import 'package:livetalk_sdk/livetalk_api.dart';
 import 'package:livetalk_sdk/livetalk_socket_manager.dart';
-import 'package:livetalk_sdk/livetalk_string_util.dart';
+import 'package:livetalk_sdk/livetalk_string_utils.dart';
 
 import 'entity/live_talk_message_entity.dart';
 
@@ -31,46 +32,50 @@ class LiveTalkSdk {
     double? lat,
     double? long,
   }) async {
-    final sdkInfo = LiveTalkApi.instance.sdkInfo;
-    if (sdkInfo == null) {
-      return null;
-    }
-    if (phone.isValidMobilePhone == false) {
-      return null;
-    }
-    final body = {
-      "uuid": uuid,
-      "start_type": "script",
-      "tenant_id": sdkInfo["tenant_id"],
-      "auto_expired": false,
-      "guest_info": {
-        "uuid": uuid,
-        "phone": phone,
-        "email": "",
-        "full_name": fullName,
-        "other_info": {
-          "full_name": fullName,
-          "phone_number": phone,
-          "mail": ""
-        },
-        "domain": domain ?? "https://omicall.com",
-        "browser": "",
-        "address": address ?? "Vietnam",
-        "ip": ip ?? "",
-        "lat": lat ?? 0,
-        "lon": long ?? 0
+    try {
+      final sdkInfo = LiveTalkApi.instance.sdkInfo;
+      if (sdkInfo == null) {
+        throw LiveTalkError(message: {"message": "empty_info"});
       }
-    };
-    final result = await LiveTalkApi.instance.createRoom(body: body);
-    //trigger websocket
-    if (result != null) {
-      LiveTalkSocketManager.shareInstance.startListenWebSocket(
-        LiveTalkApi.instance.sdkInfo!["access_token"] as String,
-        result,
-        sdkInfo["tenant_id"] as String,
-      );
+      if (phone.isValidMobilePhone == false) {
+        throw LiveTalkError(message: {"message": "invalid_phone"});
+      }
+      final body = {
+        "uuid": uuid,
+        "start_type": "script",
+        "tenant_id": sdkInfo["tenant_id"],
+        "auto_expired": false,
+        "guest_info": {
+          "uuid": uuid,
+          "phone": phone,
+          "email": "",
+          "full_name": fullName,
+          "other_info": {
+            "full_name": fullName,
+            "phone_number": phone,
+            "mail": ""
+          },
+          "domain": domain ?? "https://omicall.com",
+          "browser": "",
+          "address": address ?? "Vietnam",
+          "ip": ip ?? "",
+          "lat": lat ?? 0,
+          "lon": long ?? 0
+        }
+      };
+      final result = await LiveTalkApi.instance.createRoom(body: body);
+      //trigger websocket
+      if (result != null) {
+        LiveTalkSocketManager.shareInstance.startListenWebSocket(
+          LiveTalkApi.instance.sdkInfo!["access_token"] as String,
+          result,
+          sdkInfo["tenant_id"] as String,
+        );
+      }
+      return result;
+    } catch (error) {
+      rethrow;
     }
-    return result;
   }
 
   Future<bool> sendMessage({required String message, String? quoteId}) async {
@@ -92,7 +97,9 @@ class LiveTalkSdk {
     );
   }
 
-  Future<bool> removeMessage({required String id}) async {
+  Future<bool> removeMessage({
+    required String id,
+  }) async {
     return await LiveTalkApi.instance.removeMessage(id: id);
   }
 

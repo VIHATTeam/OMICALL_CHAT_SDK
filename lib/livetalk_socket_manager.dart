@@ -68,9 +68,11 @@ class LiveTalkSocketManager {
     });
     _socket!.on("remove_message", (data) {
       final jsonData = json.decode(data);
+      final detail = jsonData["detail"];
+      final detailJson = json.decode(detail);
       _eventController.sink.add({
         "event": "remove_message",
-        "data": jsonData,
+        "data": detailJson,
       });
     });
     _socket!.on("member_disconnect", (data) {

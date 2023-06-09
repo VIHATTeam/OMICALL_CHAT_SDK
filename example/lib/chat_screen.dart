@@ -6,10 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:images_picker/images_picker.dart';
 import 'package:livetalk_sdk/entity/live_talk_message_entity.dart';
+import 'package:livetalk_sdk/entity/livetalk_error.dart';
 import 'package:livetalk_sdk/livetalk_sdk.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 import 'create_user_form_screen.dart';
+import 'dialog/dialog.dart';
 import 'items/message_item.dart';
 import 'items/rep_message_widget.dart';
 import 'reaction_widget.dart';
@@ -79,7 +81,7 @@ class ChatState extends State<ChatScreen> {
         return;
       }
       if (event == "remove_message") {
-        final msgId = data["msg_id"];
+        final msgId = data["message_id"];
         setState(() {
           messages.removeWhere((element) => element.id == msgId);
         });
@@ -183,10 +185,6 @@ class ChatState extends State<ChatScreen> {
                                 await LiveTalkSdk.shareInstance
                                     .removeMessage(id: id);
                                 EasyLoading.dismiss();
-                                setState(() {
-                                  messages.removeWhere(
-                                      (element) => element.id == id);
-                                });
                                 //delete
                               },
                             ),
@@ -351,18 +349,28 @@ class ChatState extends State<ChatScreen> {
               ),
               GestureDetector(
                 onTap: () async {
-                  EasyLoading.show();
-                  await LiveTalkSdk.shareInstance.sendMessage(
-                    message: _controller.text,
-                    quoteId: _repMessage?.id
-                  );
-                  if (_repMessage != null) {
-                    setState(() {
-                      _repMessage = null;
-                    });
+                  try {
+                    EasyLoading.show();
+                    await LiveTalkSdk.shareInstance.sendMessage(
+                      message: _controller.text,
+                      quoteId: _repMessage?.id,
+                    );
+                    if (_repMessage != null) {
+                      setState(() {
+                        _repMessage = null;
+                      });
+                    }
+                    _controller.clear();
+                    EasyLoading.dismiss();
+                  } catch (error) {
+                    EasyLoading.dismiss();
+                    if (error is LiveTalkError) {
+                      showCustomDialog(
+                        context: context,
+                        message: error.message["message"] as String,
+                      );
+                    }
                   }
-                  _controller.clear();
-                  EasyLoading.dismiss();
                 },
                 child: Container(
                   height: 40,
@@ -401,19 +409,32 @@ class ChatState extends State<ChatScreen> {
                 onTap: () async {
                   showCupertinoModalPopup<void>(
                     context: context,
-                    builder: (BuildContext context) => CupertinoActionSheet(
+                    builder: (BuildContext dialogContext) =>
+                        CupertinoActionSheet(
                       actions: <CupertinoActionSheetAction>[
                         CupertinoActionSheetAction(
                           child: const Text('Files'),
                           onPressed: () async {
-                            Navigator.pop(context);
+                            Navigator.pop(dialogContext);
                             FilePickerResult? result = await FilePicker.platform
                                 .pickFiles(allowMultiple: true);
                             if (result != null) {
                               EasyLoading.show();
-                              await LiveTalkSdk.shareInstance.sendFiles(
-                                  paths: result.paths.cast<String>());
-                              EasyLoading.dismiss();
+                              try {
+                                await LiveTalkSdk.shareInstance.sendFiles(
+                                    paths: result.paths.cast<String>());
+                                EasyLoading.dismiss();
+                              } catch (error) {
+                                if (error is LiveTalkError) {
+                                  EasyLoading.dismiss();
+                                  if (mounted) {
+                                    showCustomDialog(
+                                      context: context,
+                                      message: error.message["message"],
+                                    );
+                                  }
+                                }
+                              }
                             }
                           },
                         ),
@@ -428,9 +449,21 @@ class ChatState extends State<ChatScreen> {
                             );
                             if (res?.isNotEmpty == true) {
                               EasyLoading.show();
-                              await LiveTalkSdk.shareInstance.sendFiles(
-                                  paths: res!.map((e) => e.path).toList());
-                              EasyLoading.dismiss();
+                              try {
+                                await LiveTalkSdk.shareInstance.sendFiles(
+                                    paths: res!.map((e) => e.path).toList());
+                                EasyLoading.dismiss();
+                              } catch (error) {
+                                if (error is LiveTalkError) {
+                                  EasyLoading.dismiss();
+                                  if (mounted) {
+                                    showCustomDialog(
+                                      context: context,
+                                      message: error.message["message"],
+                                    );
+                                  }
+                                }
+                              }
                             }
                           },
                         ),

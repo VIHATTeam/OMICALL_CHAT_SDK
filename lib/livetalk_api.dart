@@ -1,7 +1,10 @@
 import 'dart:convert';
+import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
+import 'package:livetalk_sdk/entity/livetalk_error.dart';
+import 'package:livetalk_sdk/livetalk_file_utils.dart';
+
 import 'entity/live_talk_message_entity.dart';
 
 class LiveTalkApi {
@@ -14,59 +17,82 @@ class LiveTalkApi {
   final String _baseUrl = 'https://livetalk-v2-stg.omicrm.com/widget';
 
   Future<Map<String, dynamic>?> getConfig(String domainPbx) async {
-    var headers = {'Content-Type': 'application/json'};
-    var request = http.Request(
-      'POST',
-      Uri.parse('$_baseUrl/config/get/$domainPbx'),
-    );
-    request.body = json.encode({});
-    request.headers.addAll(headers);
-    http.StreamedResponse response = await request.send();
-    if (response.statusCode == 200) {
-      final data = await response.stream.bytesToString();
-      final jsonData = json.decode(data);
-      final payload = jsonData["payload"];
-      final tentantId = payload["tenant_id"];
-      final accessToken = payload["token"]["access_token"];
-      final refreshToken = payload["token"]["refresh_token"];
-      _sdkInfo = {
-        "tenant_id": tentantId,
-        "access_token": accessToken,
-        "refresh_token": refreshToken,
-      };
-      return _sdkInfo;
+    try {
+      var headers = {'Content-Type': 'application/json'};
+      var request = http.Request(
+        'POST',
+        Uri.parse('$_baseUrl/config/get/$domainPbx'),
+      );
+      request.body = json.encode({});
+      request.headers.addAll(headers);
+      http.StreamedResponse response = await request.send();
+      if ((response.statusCode ~/ 100) > 2) {
+        throw LiveTalkError(message: {"message": response.reasonPhrase});
+      }
+      if (response.statusCode == 200) {
+        final data = await response.stream.bytesToString();
+        final jsonData = json.decode(data);
+        if (jsonData["status_code"] == -9999) {
+          throw LiveTalkError(message: jsonData);
+        }
+        final payload = jsonData["payload"];
+        final tentantId = payload["tenant_id"];
+        final accessToken = payload["token"]["access_token"];
+        final refreshToken = payload["token"]["refresh_token"];
+        _sdkInfo = {
+          "tenant_id": tentantId,
+          "access_token": accessToken,
+          "refresh_token": refreshToken,
+        };
+        return _sdkInfo;
+      }
+      return null;
+    } catch (error) {
+      rethrow;
     }
-    return null;
   }
 
   Future<String?> createRoom({
     required Map<String, dynamic> body,
   }) async {
-    var headers = {'Content-Type': 'application/json'};
-    var request = http.Request(
-      'POST',
-      Uri.parse('$_baseUrl/new_room'),
-    );
-    request.body = json.encode(body);
-    request.headers.addAll(headers);
-    http.StreamedResponse response = await request.send();
-    if (response.statusCode == 200) {
-      final data = await response.stream.bytesToString();
-      final jsonData = json.decode(data);
-      final payload = jsonData["payload"];
-      _sdkInfo!["uuid"] = payload["conversation"]["uuid"];
-      _sdkInfo!["room_id"] = payload["conversation"]["_id"];
-      _sdkInfo!["access_token"] = payload["login_token"]["access_token"];
-      _sdkInfo!["refresh_token"] = payload["login_token"]["refresh_token"];
-      return payload["conversation"]["_id"];
+    try {
+      var headers = {'Content-Type': 'application/json'};
+      var request = http.Request(
+        'POST',
+        Uri.parse('$_baseUrl/new_room'),
+      );
+      request.body = json.encode(body);
+      request.headers.addAll(headers);
+      http.StreamedResponse response = await request.send();
+      if ((response.statusCode ~/ 100) > 2) {
+        throw LiveTalkError(message: {"message": response.reasonPhrase});
+      }
+      if (response.statusCode == 200) {
+        final data = await response.stream.bytesToString();
+        final jsonData = json.decode(data);
+        if (jsonData["status_code"] == -9999) {
+          throw LiveTalkError(message: jsonData);
+        }
+        final payload = jsonData["payload"];
+        _sdkInfo!["uuid"] = payload["conversation"]["uuid"];
+        _sdkInfo!["room_id"] = payload["conversation"]["_id"];
+        _sdkInfo!["access_token"] = payload["login_token"]["access_token"];
+        _sdkInfo!["refresh_token"] = payload["login_token"]["refresh_token"];
+        return payload["conversation"]["_id"];
+      }
+      return null;
+    } catch (error) {
+      rethrow;
     }
-    return null;
   }
 
   Future<bool> sendMessage({
     required String message,
     String? quoteId,
   }) async {
+    if (sdkInfo == null) {
+      throw LiveTalkError(message: {"message": "empty_info"});
+    }
     var headers = {
       'Content-Type': 'application/json',
       'Authorization': "Bearer ${_sdkInfo!["access_token"] as String}",
@@ -86,10 +112,15 @@ class LiveTalkApi {
     request.body = json.encode(body);
     request.headers.addAll(headers);
     http.StreamedResponse response = await request.send();
+    if ((response.statusCode ~/ 100) > 2) {
+      throw LiveTalkError(message: {"message": response.reasonPhrase});
+    }
     if (response.statusCode == 200) {
       final data = await response.stream.bytesToString();
       final jsonData = json.decode(data);
-      debugPrint(jsonData.toString());
+      if (jsonData["status_code"] == -9999) {
+        throw LiveTalkError(message: jsonData);
+      }
       return true;
     }
     return false;
@@ -100,6 +131,9 @@ class LiveTalkApi {
     required String id,
     required String action,
   }) async {
+    if (sdkInfo == null) {
+      throw LiveTalkError(message: {"message": "empty_info"});
+    }
     var headers = {
       'Content-Type': 'application/json',
       'Authorization': "Bearer ${_sdkInfo!["access_token"] as String}",
@@ -117,16 +151,35 @@ class LiveTalkApi {
     });
     request.headers.addAll(headers);
     http.StreamedResponse response = await request.send();
+    if ((response.statusCode ~/ 100) > 2) {
+      throw LiveTalkError(message: {"message": response.reasonPhrase});
+    }
     if (response.statusCode == 200) {
       final data = await response.stream.bytesToString();
       final jsonData = json.decode(data);
-      debugPrint(jsonData.toString());
+      if (jsonData["status_code"] == -9999) {
+        throw LiveTalkError(message: jsonData);
+      }
       return true;
     }
     return false;
   }
 
   Future<bool> sendFiles({required List<String> paths}) async {
+    if (sdkInfo == null) {
+      throw LiveTalkError(message: {"message": "empty_info"});
+    }
+    if (paths.isEmpty == true) {
+      return true;
+    }
+    final files = paths.map((e) => File(e)).toList();
+    final totalSize = files.fold(
+      0.0,
+      (previousValue, element) => previousValue + element.fileSize,
+    );
+    if (totalSize > 100) {
+      throw LiveTalkError(message: {"message": "limit_100mb"});
+    }
     var headers = {
       'Content-Type': 'multipart/form-data',
       'Authorization': "Bearer ${_sdkInfo!["access_token"] as String}",
@@ -144,10 +197,15 @@ class LiveTalkApi {
     });
     request.headers.addAll(headers);
     http.StreamedResponse response = await request.send();
+    if ((response.statusCode ~/ 100) > 2) {
+      throw LiveTalkError(message: {"message": response.reasonPhrase});
+    }
     if (response.statusCode == 200) {
       final data = await response.stream.bytesToString();
       final jsonData = json.decode(data);
-      debugPrint(jsonData.toString());
+      if (jsonData["status_code"] == -9999) {
+        throw LiveTalkError(message: jsonData);
+      }
       return true;
     }
     return false;
@@ -157,6 +215,9 @@ class LiveTalkApi {
     required int page,
     int size = 15,
   }) async {
+    if (sdkInfo == null) {
+      throw LiveTalkError(message: {"message": "empty_info"});
+    }
     var headers = {
       'Content-Type': 'application/json',
       'Authorization': "Bearer ${_sdkInfo!["access_token"] as String}",
@@ -168,9 +229,15 @@ class LiveTalkApi {
     request.body = json.encode({});
     request.headers.addAll(headers);
     http.StreamedResponse response = await request.send();
+    if ((response.statusCode ~/ 100) > 2) {
+      throw LiveTalkError(message: {"message": response.reasonPhrase});
+    }
     if (response.statusCode == 200) {
       final data = await response.stream.bytesToString();
       final jsonData = json.decode(data);
+      if (jsonData["status_code"] == -9999) {
+        throw LiveTalkError(message: jsonData);
+      }
       final items = jsonData["payload"]["items"] as List;
       return List.generate(items.length,
           (index) => LiveTalkMessageEntity.fromJson(items[index]));
@@ -179,6 +246,9 @@ class LiveTalkApi {
   }
 
   Future<bool> removeMessage({required String id}) async {
+    if (sdkInfo == null) {
+      throw LiveTalkError(message: {"message": "empty_info"});
+    }
     var headers = {
       'Content-Type': 'application/json',
       'Authorization': "Bearer ${_sdkInfo!["access_token"] as String}",
@@ -193,10 +263,15 @@ class LiveTalkApi {
     });
     request.headers.addAll(headers);
     http.StreamedResponse response = await request.send();
+    if ((response.statusCode ~/ 100) > 2) {
+      throw LiveTalkError(message: {"message": response.reasonPhrase});
+    }
     if (response.statusCode == 200) {
       final data = await response.stream.bytesToString();
       final jsonData = json.decode(data);
-      debugPrint(jsonData.toString());
+      if (jsonData["status_code"] == -9999) {
+        throw LiveTalkError(message: jsonData);
+      }
       return true;
     }
     return false;

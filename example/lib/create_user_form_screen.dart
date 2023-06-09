@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:livetalk_sdk/entity/livetalk_error.dart';
 import 'package:livetalk_sdk/livetalk_sdk.dart';
 import 'package:livetalk_sdk_example/chat_screen.dart';
+import 'package:livetalk_sdk_example/dialog/dialog.dart';
 
 class CreateUserFormScreen extends StatefulWidget {
   const CreateUserFormScreen({Key? key}) : super(key: key);
@@ -102,18 +104,30 @@ class _CreateUserFormState extends State<CreateUserFormScreen> {
             GestureDetector(
               onTap: () async {
                 FocusScope.of(context).unfocus();
-                EasyLoading.show();
-                final result = await LiveTalkSdk.shareInstance.createRoom(
-                  phone: _phoneController.text,
-                  fullName: _userNameController.text,
-                  uuid: _phoneController.text,
-                );
-                EasyLoading.dismiss();
-                if (result != null && mounted) {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const ChatScreen()),
+                try {
+                  EasyLoading.show();
+                  final result = await LiveTalkSdk.shareInstance.createRoom(
+                    phone: _phoneController.text,
+                    fullName: _userNameController.text,
+                    uuid: _phoneController.text,
                   );
+                  EasyLoading.dismiss();
+                  if (result != null && mounted) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ChatScreen(),
+                      ),
+                    );
+                  }
+                } catch (error) {
+                  EasyLoading.dismiss();
+                  if (error is LiveTalkError) {
+                    showCustomDialog(
+                      context: context,
+                      message: error.message["message"] as String,
+                    );
+                  }
                 }
               },
               child: Container(
@@ -156,10 +170,10 @@ class _CreateUserFormState extends State<CreateUserFormScreen> {
 }
 
 OutlineInputBorder myInputBorder() {
-  //return type is OutlineInputBorder
   return const OutlineInputBorder(
-    //Outline border type for TextFeild
-    borderRadius: BorderRadius.all(Radius.circular(30)),
+    borderRadius: BorderRadius.all(
+      Radius.circular(30),
+    ),
     borderSide: BorderSide(
       color: Colors.redAccent,
       width: 3,
