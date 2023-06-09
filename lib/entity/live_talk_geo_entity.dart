@@ -63,7 +63,7 @@ class LiveTalkGeoEntity {
     geopluginDmaCode = json['geoplugin_dmaCode'];
     geopluginCountryCode = json['geoplugin_countryCode'];
     geopluginCountryName = json['geoplugin_countryName'];
-    geopluginInEU = json['geoplugin_inEU'];
+    geopluginInEU = json['geoplugin_inEU']?.toInt();
     geopluginEuVATrate = json['geoplugin_euVATrate'];
     geopluginContinentCode = json['geoplugin_continentCode'];
     geopluginContinentName = json['geoplugin_continentName'];
@@ -74,7 +74,7 @@ class LiveTalkGeoEntity {
     geopluginCurrencyCode = json['geoplugin_currencyCode'];
     geopluginCurrencySymbol = json['geoplugin_currencySymbol'];
     geopluginCurrencySymbolUTF8 = json['geoplugin_currencySymbol_UTF8'];
-    geopluginCurrencyConverter = json['geoplugin_currencyConverter'];
+    geopluginCurrencyConverter = "${json['geoplugin_currencyConverter']}";
   }
   String? geopluginRequest;
   int? geopluginStatus;
@@ -99,7 +99,7 @@ class LiveTalkGeoEntity {
   String? geopluginCurrencyCode;
   String? geopluginCurrencySymbol;
   String? geopluginCurrencySymbolUTF8;
-  int? geopluginCurrencyConverter;
+  String? geopluginCurrencyConverter;
 LiveTalkGeoEntity copyWith({  String? geopluginRequest,
   int? geopluginStatus,
   String? geopluginDelay,
@@ -123,7 +123,7 @@ LiveTalkGeoEntity copyWith({  String? geopluginRequest,
   String? geopluginCurrencyCode,
   String? geopluginCurrencySymbol,
   String? geopluginCurrencySymbolUTF8,
-  int? geopluginCurrencyConverter,
+  String? geopluginCurrencyConverter,
 }) => LiveTalkGeoEntity(  geopluginRequest: geopluginRequest ?? this.geopluginRequest,
   geopluginStatus: geopluginStatus ?? this.geopluginStatus,
   geopluginDelay: geopluginDelay ?? this.geopluginDelay,

@@ -335,7 +335,8 @@ class LiveTalkApi {
         throw LiveTalkError(message: jsonData);
       }
       final payload = json.decode(jsonData["payload"]);
-      return LiveTalkGeoEntity.fromJson(payload);
+      final result = LiveTalkGeoEntity.fromJson(payload);
+      return result;
     }
     return null;
   }
