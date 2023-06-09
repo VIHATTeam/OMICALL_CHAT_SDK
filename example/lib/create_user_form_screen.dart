@@ -18,9 +18,9 @@ class CreateUserFormScreen extends StatefulWidget {
 class _CreateUserFormState extends State<CreateUserFormScreen> {
   //video
   late final TextEditingController _userNameController = TextEditingController()
-    ..text = "Steve2";
+    ..text = "";
   late final TextEditingController _phoneController = TextEditingController()
-    ..text = '0961046446';
+    ..text = '';
   late final TextEditingController _emailController = TextEditingController()
     ..text = '';
 
@@ -68,7 +68,7 @@ class _CreateUserFormState extends State<CreateUserFormScreen> {
           children: <Widget>[
             TextField(
               controller: _userNameController,
-              keyboardType: TextInputType.number,
+              keyboardType: TextInputType.name,
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.person),
                 labelText: "User Name",
