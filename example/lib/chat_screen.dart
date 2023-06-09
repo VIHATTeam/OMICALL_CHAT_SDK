@@ -5,8 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:images_picker/images_picker.dart';
-import 'package:livetalk_sdk/entity/live_talk_message_entity.dart';
-import 'package:livetalk_sdk/entity/livetalk_error.dart';
+import 'package:livetalk_sdk/entity/entity.dart';
 import 'package:livetalk_sdk/livetalk_sdk.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 

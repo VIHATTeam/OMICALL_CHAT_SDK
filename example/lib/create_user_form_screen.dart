@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:livetalk_sdk/entity/livetalk_error.dart';
+import 'package:livetalk_sdk/entity/entity.dart';
 import 'package:livetalk_sdk/livetalk_sdk.dart';
 import 'package:livetalk_sdk_example/chat_screen.dart';
 import 'package:livetalk_sdk_example/dialog/dialog.dart';

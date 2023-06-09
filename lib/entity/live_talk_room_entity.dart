@@ -302,48 +302,6 @@ class CreatedBy {
   }
 }
 
-class OtherInfo {
-  OtherInfo({
-    this.fullName,
-    this.phoneNumber,
-    this.mail,
-  });
-
-  OtherInfo.fromJson(dynamic json) {
-    fullName = json['full_name'];
-    phoneNumber = json['phone_number'];
-    mail = json['mail'];
-  }
-
-  String? fullName;
-  String? phoneNumber;
-  String? mail;
-
-  OtherInfo copyWith({
-    String? fullName,
-    String? phoneNumber,
-    String? mail,
-  }) =>
-      OtherInfo(
-        fullName: fullName ?? this.fullName,
-        phoneNumber: phoneNumber ?? this.phoneNumber,
-        mail: mail ?? this.mail,
-      );
-
-  Map<String, dynamic> toJson() {
-    final map = <String, dynamic>{};
-    map['full_name'] = fullName;
-    map['phone_number'] = phoneNumber;
-    map['mail'] = mail;
-    return map;
-  }
-}
-
-/// id : ""
-/// name : "Steve2"
-/// contact_id : ""
-/// avatar_url : ""
-
 class CreateBy {
   CreateBy({
     this.id,

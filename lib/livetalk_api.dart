@@ -1,13 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:http/http.dart' as http;
-import 'package:livetalk_sdk/entity/live_talk_room_entity.dart';
-import 'package:livetalk_sdk/entity/livetalk_error.dart';
 import 'package:livetalk_sdk/livetalk_file_utils.dart';
 import 'package:livetalk_sdk/livetalk_string_utils.dart';
-
-import 'entity/live_talk_message_entity.dart';
+import 'entity/entity.dart';
 
 class LiveTalkApi {
   LiveTalkApi._();
@@ -310,5 +306,32 @@ class LiveTalkApi {
       return true;
     }
     return false;
+  }
+
+  Future<LiveTalkGeoEntity?> getGeo() async {
+    var headers = {
+      'Content-Type': 'application/json',
+    };
+    var request = http.Request(
+      'GET',
+      Uri.parse('$_baseUrl/geo'),
+    );
+    request.body = json.encode({
+    });
+    request.headers.addAll(headers);
+    http.StreamedResponse response = await request.send();
+    if ((response.statusCode ~/ 100) > 2) {
+      throw LiveTalkError(message: {"message": response.reasonPhrase});
+    }
+    if (response.statusCode == 200) {
+      final data = await response.stream.bytesToString();
+      final jsonData = json.decode(data);
+      if (jsonData["status_code"] == -9999) {
+        throw LiveTalkError(message: jsonData);
+      }
+      final payload = json.decode(jsonData["payload"]);
+      return LiveTalkGeoEntity.fromJson(payload);
+    }
+    return null;
   }
 }

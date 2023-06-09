@@ -1,12 +1,10 @@
 import 'dart:async';
 
-import 'package:livetalk_sdk/entity/live_talk_room_entity.dart';
-import 'package:livetalk_sdk/entity/livetalk_error.dart';
 import 'package:livetalk_sdk/livetalk_api.dart';
 import 'package:livetalk_sdk/livetalk_socket_manager.dart';
 import 'package:livetalk_sdk/livetalk_string_utils.dart';
 
-import 'entity/live_talk_message_entity.dart';
+import 'entity/entity.dart';
 
 class LiveTalkSdk {
   final String domainPbx;
@@ -29,10 +27,6 @@ class LiveTalkSdk {
     required String uuid,
     bool autoExpired = false,
     String? domain,
-    String? address,
-    String? ip,
-    double? lat,
-    double? long,
   }) async {
     try {
       final sdkInfo = LiveTalkApi.instance.sdkInfo;
@@ -41,6 +35,10 @@ class LiveTalkSdk {
       }
       if (phone.isValidMobilePhone == false) {
         throw LiveTalkError(message: {"message": "invalid_phone"});
+      }
+      final geo = await LiveTalkApi.instance.getGeo();
+      if (geo == null) {
+        throw LiveTalkError(message: {"message": "invalid_ip"});
       }
       final body = {
         "uuid": uuid,
@@ -59,10 +57,10 @@ class LiveTalkSdk {
           },
           "domain": domain ?? "https://omicall.com",
           "browser": "",
-          "address": address ?? "Vietnam",
-          "ip": ip ?? "",
-          "lat": lat ?? 0,
-          "lon": long ?? 0
+          "address": "${geo.geopluginRegion} - ${geo.geopluginCountryName}",
+          "ip": geo.geopluginRequest ?? "",
+          "lat": geo.geopluginLatitude,
+          "lon": geo.geopluginLongitude,
         }
       };
       final result = await LiveTalkApi.instance.createRoom(body: body);
