@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:livetalk_sdk/livetalk.dart';
+import 'package:livetalk_sdk/livetalk_string_utils.dart';
 import 'package:livetalk_sdk_example/audio_preview.dart';
 import 'package:livetalk_sdk_example/datetime_helper.dart';
 import 'package:livetalk_sdk_example/extensions/string_extension.dart';
@@ -117,7 +118,7 @@ class MessageItem extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    data.content ?? "",
+                    (data.content ?? "").decode,
                     style: TextStyle(
                       fontSize: 16,
                       color:

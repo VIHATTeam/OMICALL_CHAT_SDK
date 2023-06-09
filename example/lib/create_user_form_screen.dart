@@ -24,6 +24,8 @@ class _CreateUserFormState extends State<CreateUserFormScreen> {
   late final TextEditingController _emailController = TextEditingController()
     ..text = '';
 
+  bool _isAutoExpired = false;
+
   TextStyle basicStyle = const TextStyle(
     color: Colors.white,
     fontSize: 16,
@@ -98,6 +100,39 @@ class _CreateUserFormState extends State<CreateUserFormScreen> {
                 focusedBorder: myFocusBorder(),
               ),
             ),
+            Container(
+              margin: const EdgeInsets.only(
+                top: 16,
+              ),
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _isAutoExpired = !_isAutoExpired;
+                  });
+                },
+                child: Row(
+                  children: [
+                    Icon(
+                      _isAutoExpired
+                          ? Icons.check_circle
+                          : Icons.circle_outlined,
+                      size: 24,
+                      color: _isAutoExpired ? Colors.blue : Colors.grey,
+                    ),
+                    const SizedBox(
+                      width: 8,
+                    ),
+                    Text(
+                      "Auto Expired",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: _isAutoExpired ? Colors.blue : Colors.grey,
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            ),
             const SizedBox(
               height: 16,
             ),
@@ -110,6 +145,7 @@ class _CreateUserFormState extends State<CreateUserFormScreen> {
                     phone: _phoneController.text,
                     fullName: _userNameController.text,
                     uuid: _phoneController.text,
+                    autoExpired: _isAutoExpired,
                   );
                   EasyLoading.dismiss();
                   if (result != null && mounted) {

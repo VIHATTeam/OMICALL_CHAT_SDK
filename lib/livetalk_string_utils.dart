@@ -10,4 +10,12 @@ extension ExtensionString on String {
     }
     return true;
   }
+
+  String get encode {
+    return Uri.encodeComponent(this);
+  }
+
+  String get decode {
+    return Uri.decodeComponent(this);
+  }
 }

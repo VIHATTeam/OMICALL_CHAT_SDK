@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:livetalk_sdk/livetalk.dart';
+import 'package:livetalk_sdk/livetalk_string_utils.dart';
 import 'package:livetalk_sdk_example/audio_preview.dart';
 import 'package:livetalk_sdk_example/datetime_helper.dart';
 import 'package:livetalk_sdk_example/extensions/string_extension.dart';
@@ -49,7 +50,7 @@ class RepMessageItem extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
-            data.content ?? "",
+            (data.content ?? "").decode,
             style: TextStyle(
               fontSize: 16,
               color: data.memberType != "guest" ? Colors.black : Colors.white,

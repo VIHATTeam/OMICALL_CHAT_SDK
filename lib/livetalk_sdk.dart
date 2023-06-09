@@ -27,6 +27,7 @@ class LiveTalkSdk {
     required String phone,
     required String fullName,
     required String uuid,
+    bool autoExpired = false,
     String? domain,
     String? address,
     String? ip,
@@ -45,7 +46,7 @@ class LiveTalkSdk {
         "uuid": uuid,
         "start_type": "script",
         "tenant_id": sdkInfo["tenant_id"],
-        "auto_expired": false,
+        "auto_expired": autoExpired,
         "guest_info": {
           "uuid": uuid,
           "phone": phone,

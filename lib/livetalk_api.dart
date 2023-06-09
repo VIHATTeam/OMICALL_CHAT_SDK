@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:livetalk_sdk/entity/live_talk_room_entity.dart';
 import 'package:livetalk_sdk/entity/livetalk_error.dart';
 import 'package:livetalk_sdk/livetalk_file_utils.dart';
+import 'package:livetalk_sdk/livetalk_string_utils.dart';
 
 import 'entity/live_talk_message_entity.dart';
 
@@ -136,7 +137,7 @@ class LiveTalkApi {
       Uri.parse('$_baseUrl/message/guest_send_message'),
     );
     final body = {
-      "content": message,
+      "content": message.encode,
       "uuid": _sdkInfo!["uuid"],
       "room_id": _sdkInfo!["room_id"],
     };
