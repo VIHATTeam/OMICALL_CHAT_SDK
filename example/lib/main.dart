@@ -8,7 +8,7 @@ import 'package:livetalk_sdk_example/create_user_form_screen.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   HttpOverrides.global = MyHttpOverrides();
-  LiveTalkSdk(domainPbx: "devtestcallbot");
+  LiveTalkSdk(domainPbx: "");
   runApp(const MyApp());
 }
 
