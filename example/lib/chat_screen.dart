@@ -33,7 +33,7 @@ class ChatState extends State<ChatScreen> {
   int size = 20;
   List<LiveTalkMessageEntity> messages = [];
   bool isLoading = false;
-  late StreamSubscription _messageSubscription;
+  late StreamSubscription<LiveTalkEventEntity> _messageSubscription;
   bool isTyping = false;
   bool isAdminOnline = false;
   final FocusNode focusNode = FocusNode();
@@ -46,17 +46,17 @@ class ChatState extends State<ChatScreen> {
     super.initState();
     _messageSubscription =
         LiveTalkSdk.shareInstance.eventStream.listen((result) {
-      final event = result["event"];
-      final data = result["data"];
-      if (event == "message") {
+      final event = result.eventName;
+      final data = result.data;
+      if (event == "message" && data != null) {
         setState(() {
-          messages.insert(0, data as LiveTalkMessageEntity);
+          messages.insert(0, LiveTalkMessageEntity.fromJson(data));
         });
         return;
       }
       if (event == "someone_typing") {
         setState(() {
-          isTyping = data["isTyping"];
+          isTyping = data!["isTyping"];
         });
       }
       if (event == "member_join") {
@@ -75,17 +75,17 @@ class ChatState extends State<ChatScreen> {
       if (event == "lt_reaction") {
         LiveTalkMessageEntity? message =
             messages.cast<LiveTalkMessageEntity?>().firstWhere(
-                  (element) => element?.id == data["msg_id"],
+                  (element) => element?.id == data!["msg_id"],
                   orElse: () => null,
                 );
         if (message != null) {
-          message.setNewReaction(data["reactions"]);
+          message.setNewReaction(data!["reactions"]);
         }
         setState(() {});
         return;
       }
       if (event == "remove_message") {
-        final msgId = data["message_id"];
+        final msgId = data!["message_id"];
         setState(() {
           messages.removeWhere((element) => element.id == msgId);
         });
@@ -102,7 +102,8 @@ class ChatState extends State<ChatScreen> {
         EasyLoading.dismiss();
         return;
       }
-      if (currentRoom.hasMember == true && currentRoom.members?.isNotEmpty == true) {
+      if (currentRoom.hasMember == true &&
+          currentRoom.members?.isNotEmpty == true) {
         final member = currentRoom.members!.first;
         title = member.fullName;
         isAdminOnline = member.status == "online";
@@ -383,10 +384,12 @@ class ChatState extends State<ChatScreen> {
                 onTap: () async {
                   try {
                     EasyLoading.show();
-                    await LiveTalkSdk.shareInstance.sendMessage(
+                    final sendingMessage =
+                        LiveTalkSendingMessage.createTxtSendMessage(
                       message: _controller.text,
                       quoteId: _repMessage?.id,
                     );
+                    await LiveTalkSdk.shareInstance.sendMessage(sendingMessage);
                     if (_repMessage != null) {
                       setState(() {
                         _repMessage = null;
@@ -453,8 +456,13 @@ class ChatState extends State<ChatScreen> {
                             if (result != null) {
                               EasyLoading.show();
                               try {
-                                await LiveTalkSdk.shareInstance.sendFiles(
-                                    paths: result.paths.cast<String>());
+                                final sendingMessage =
+                                    LiveTalkSendingMessage.createTxtSendFiles(
+                                  paths: result.paths.cast<String>(),
+                                );
+                                await LiveTalkSdk.shareInstance.sendMessage(
+                                  sendingMessage,
+                                );
                                 EasyLoading.dismiss();
                               } catch (error) {
                                 if (error is LiveTalkError) {
@@ -483,8 +491,11 @@ class ChatState extends State<ChatScreen> {
                             if (res?.isNotEmpty == true) {
                               EasyLoading.show();
                               try {
-                                await LiveTalkSdk.shareInstance.sendFiles(
-                                    paths: res!.map((e) => e.path).toList());
+                                final sendingMessage =
+                                LiveTalkSendingMessage.createTxtSendFiles(
+                                  paths: res!.map((e) => e.path).toList(),
+                                );
+                                await LiveTalkSdk.shareInstance.sendMessage(sendingMessage);
                                 EasyLoading.dismiss();
                               } catch (error) {
                                 if (error is LiveTalkError) {

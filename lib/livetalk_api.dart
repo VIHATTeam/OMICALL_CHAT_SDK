@@ -118,7 +118,21 @@ class LiveTalkApi {
     }
   }
 
-  Future<bool> sendMessage({
+
+  Future<bool> sendMessage(LiveTalkSendingMessage message) async {
+    final messageTxt = message.message;
+    final quoteId = message.quoteId;
+    final paths = message.paths;
+    if (messageTxt != null) {
+      return _sendText(message: messageTxt, quoteId: quoteId);
+    }
+    if (paths != null) {
+      return _sendFiles(paths: paths);
+    }
+    return false;
+  }
+
+  Future<bool> _sendText({
     required String message,
     String? quoteId,
   }) async {
@@ -197,7 +211,7 @@ class LiveTalkApi {
     return false;
   }
 
-  Future<bool> sendFiles({required List<String> paths}) async {
+  Future<bool> _sendFiles({required List<String> paths}) async {
     if (sdkInfo == null) {
       throw LiveTalkError(message: {"message": "empty_info"});
     }

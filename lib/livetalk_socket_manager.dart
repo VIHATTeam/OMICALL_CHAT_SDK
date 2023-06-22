@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:livetalk_sdk/entity/live_talk_message_entity.dart';
+import 'package:livetalk_sdk/entity/entity.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'package:socket_io_client/socket_io_client.dart';
 
@@ -16,8 +16,10 @@ class LiveTalkSocketManager {
     return _instance!;
   }
 
-  final StreamController _eventController = StreamController.broadcast();
-  Stream<dynamic> get eventStream => _eventController.stream;
+  final StreamController<LiveTalkEventEntity> _eventController =
+      StreamController<LiveTalkEventEntity>.broadcast();
+
+  Stream<LiveTalkEventEntity> get eventStream => _eventController.stream;
   io.Socket? _socket;
 
   Future<void> startListenWebSocket(
@@ -36,72 +38,87 @@ class LiveTalkSocketManager {
     );
     _socket!.connect();
     _socket!.onConnect((data) {
-      _eventController.sink.add({
-        "event": "socket_connected",
-      });
+      _eventController.sink.add(
+        const LiveTalkEventEntity(
+          eventName: "socket_connected",
+        ),
+      );
     });
     _socket!.on("message", (data) {
       final jsonData = json.decode(data);
       final detail = json.decode(jsonData["detail"]);
-      _eventController.sink.add({
-        "event": "message",
-        "data": LiveTalkMessageEntity.fromJson(detail),
-      });
+      _eventController.sink.add(
+        LiveTalkEventEntity(
+          eventName: "message",
+          data: detail,
+        ),
+      );
     });
     _socket!.on("lt_reaction", (data) {
       final jsonData = json.decode(data);
       final detail = json.decode(jsonData["detail"]);
-      _eventController.sink.add({
-        "event": "lt_reaction",
-        "data": detail,
-      });
+      _eventController.sink.add(
+        LiveTalkEventEntity(
+          eventName: "lt_reaction",
+          data: detail,
+        ),
+      );
     });
     _socket!.on("member_join", (data) {
       final jsonData = json.decode(data);
-      final detail = jsonData["detail"];
-      final detailJson = json.decode(detail);
-      _eventController.sink.add({
-        "event": "member_join",
-        "data": detailJson,
-      });
+      final detail = json.decode(jsonData["detail"]);
+      _eventController.sink.add(
+        LiveTalkEventEntity(
+          eventName: "member_join",
+          data: detail,
+        ),
+      );
     });
     _socket!.on("member_connect", (data) {
       final jsonData = json.decode(data);
-      _eventController.sink.add({
-        "event": "member_connect",
-        "data": jsonData,
-      });
+      _eventController.sink.add(LiveTalkEventEntity(
+        eventName: "member_connect",
+        data: jsonData,
+      ));
     });
     _socket!.on("remove_message", (data) {
       final jsonData = json.decode(data);
-      final detail = jsonData["detail"];
-      final detailJson = json.decode(detail);
-      _eventController.sink.add({
-        "event": "remove_message",
-        "data": detailJson,
-      });
+      final detail = json.decode(jsonData["detail"]);
+      _eventController.sink.add(
+        LiveTalkEventEntity(
+          eventName: "member_connect",
+          data: detail,
+        ),
+      );
     });
     _socket!.on("member_disconnect", (data) {
       final jsonData = json.decode(data);
-      _eventController.sink.add({
-        "event": "member_disconnect",
-        "data": jsonData,
-      });
+      _eventController.sink.add(
+        LiveTalkEventEntity(
+          eventName: "member_disconnect",
+          data: jsonData,
+        ),
+      );
     });
     _socket!.on("new_member", (data) {
       debugPrint("new_member event");
     });
     _socket!.on("someone_typing", (data) {
       final jsonData = json.decode(data);
-      _eventController.sink.add({
-        "event": "someone_typing",
-        "data": jsonData,
-      });
+      _eventController.sink.add(
+        LiveTalkEventEntity(
+          eventName: "someone_typing",
+          data: jsonData,
+        ),
+      );
     });
     _socket!.onError((data) {
-      _eventController.sink.add({
-        "event": "socket_connect_error",
-      });
+      _eventController.sink.add(
+        const LiveTalkEventEntity(
+          eventName: "socket_connect_error",
+          data: null,
+        ),
+      );
     });
   }
 

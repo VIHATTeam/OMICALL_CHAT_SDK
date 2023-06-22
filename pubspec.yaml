@@ -1,6 +1,6 @@
 name: livetalk_sdk
 description: livetalk is wrapper SDK for LiveTalk for Application easy integrate features of Omicall LikeTalk to chat/receive message.
-version: 0.0.1
+version: 0.0.2
 homepage: https://github.com/VIHATTeam/OMICALL_CHAT_SDK
 
 environment:

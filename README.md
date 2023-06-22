@@ -86,10 +86,13 @@ Important fields:
 ```
 - Send message:
 ```
+final sendingMessage = LiveTalkSendingMessage.createTxtSendMessage(
+  message: _controller.text, 
+  quoteId: _repMessage?.id, 
+);
 try {
     await LiveTalkSdk.shareInstance.sendMessage(
-        message: _controller.text,
-        quoteId: _repMessage?.id,
+        sendingMessage
     );
     _controller.clear();
 } catch (error) {
@@ -106,10 +109,14 @@ Parameters:
 
 - Send files:
 ```
+final sendingMessage = LiveTalkSendingMessage.createTxtSendFiles(
+  paths: result.paths.cast<String>(),
+);
 try {
-    await LiveTalkSdk.shareInstance.sendFiles(
-        paths: [],
-  } catch (error) {
+   await LiveTalkSdk.shareInstance.sendMessage(
+      sendingMessage
+   );
+} catch (error) {
     if (error is LiveTalkError) {
     }
 }
@@ -148,8 +155,8 @@ Parameters:
 - Websocket events:
 ```
 LiveTalkSdk.shareInstance.eventStream.listen((result) {
-  final event = result["event"];
-  final data = result["data"];
+   final event = result.eventName;
+   final data = result.data;
 });
 
 With:

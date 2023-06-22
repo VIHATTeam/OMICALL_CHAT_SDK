@@ -18,7 +18,7 @@ class LiveTalkSdk {
     _instance = this;
   }
 
-  Stream<dynamic> get eventStream =>
+  Stream<LiveTalkEventEntity> get eventStream =>
       LiveTalkSocketManager.shareInstance.eventStream;
 
   Future<String?> createRoom({
@@ -82,11 +82,8 @@ class LiveTalkSdk {
     return await LiveTalkApi.instance.getCurrentRoom();
   }
 
-  Future<bool> sendMessage({required String message, String? quoteId}) async {
-    return await LiveTalkApi.instance.sendMessage(
-      message: message,
-      quoteId: quoteId,
-    );
+  Future<bool> sendMessage(LiveTalkSendingMessage message) async {
+    return await LiveTalkApi.instance.sendMessage(message);
   }
 
   Future<bool> actionOnMessage({
@@ -105,10 +102,6 @@ class LiveTalkSdk {
     required String id,
   }) async {
     return await LiveTalkApi.instance.removeMessage(id: id);
-  }
-
-  Future<bool> sendFiles({required List<String> paths}) async {
-    return await LiveTalkApi.instance.sendFiles(paths: paths);
   }
 
   Future<List<LiveTalkMessageEntity>> getMessageHistory({
