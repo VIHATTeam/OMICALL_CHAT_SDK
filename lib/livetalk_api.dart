@@ -219,7 +219,7 @@ class LiveTalkApi {
       return true;
     }
     final files = paths.map((e) => File(e)).toList();
-    final totalSize = files.fold(
+    final totalSize = files.fold<double>(
       0.0,
       (previousValue, element) => previousValue + element.fileSize,
     );
