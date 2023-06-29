@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/material.dart';
+
 import 'package:http/http.dart' as http;
 import 'package:livetalk_sdk/livetalk_file_utils.dart';
 import 'package:livetalk_sdk/livetalk_string_utils.dart';
+
 import 'entity/entity.dart';
 
 class LiveTalkApi {
@@ -122,12 +123,53 @@ class LiveTalkApi {
   Future<bool> sendMessage(LiveTalkSendingMessage message) async {
     final messageTxt = message.message;
     final quoteId = message.quoteId;
+    final sticker = message.sticker;
     final paths = message.paths;
+    if (sticker != null) {
+      return _sendSticker(sticker: sticker);
+    }
     if (messageTxt != null) {
       return _sendText(message: messageTxt, quoteId: quoteId);
     }
     if (paths != null) {
       return _sendFiles(paths: paths);
+    }
+    return false;
+  }
+
+  Future<bool> _sendSticker({
+    required String sticker,
+  }) async {
+    if (sdkInfo == null) {
+      throw LiveTalkError(message: {"message": "empty_info"});
+    }
+    var headers = {
+      'Content-Type': 'application/json',
+      'Authorization': "Bearer ${_sdkInfo!["access_token"] as String}",
+    };
+    var request = http.Request(
+      'POST',
+      Uri.parse('$_baseUrl/message/sticker/guest_send'),
+    );
+    final body = {
+      "type": "guest",
+      "url": sticker,
+      "uuid": _sdkInfo!["uuid"],
+      "room_id": _sdkInfo!["room_id"],
+    };
+    request.body = json.encode(body);
+    request.headers.addAll(headers);
+    http.StreamedResponse response = await request.send();
+    if ((response.statusCode ~/ 100) > 2) {
+      throw LiveTalkError(message: {"message": response.reasonPhrase});
+    }
+    if (response.statusCode == 200) {
+      final data = await response.stream.bytesToString();
+      final jsonData = json.decode(data);
+      if (jsonData["status_code"] == -9999) {
+        throw LiveTalkError(message: jsonData);
+      }
+      return true;
     }
     return false;
   }

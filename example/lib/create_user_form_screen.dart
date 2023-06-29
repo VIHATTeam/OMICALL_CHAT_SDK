@@ -18,9 +18,9 @@ class CreateUserFormScreen extends StatefulWidget {
 class _CreateUserFormState extends State<CreateUserFormScreen> {
   //video
   late final TextEditingController _userNameController = TextEditingController()
-    ..text = "";
+    ..text = "N 0383736383";
   late final TextEditingController _phoneController = TextEditingController()
-    ..text = '';
+    ..text = '0383736383';
   late final TextEditingController _emailController = TextEditingController()
     ..text = '';
 

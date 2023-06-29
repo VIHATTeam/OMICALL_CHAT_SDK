@@ -49,7 +49,9 @@ class MessageItem extends StatelessWidget {
         children: [
           if (data.memberType == "guest") ...[
             replyWidget,
-            const SizedBox(width: 6,),
+            const SizedBox(
+              width: 6,
+            ),
             reactWidget,
             const SizedBox(
               width: 6,
@@ -57,17 +59,16 @@ class MessageItem extends StatelessWidget {
           ],
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              fileWidget,
-              reactionWidget
-            ],
+            children: [fileWidget, reactionWidget],
           ),
           if (data.memberType != "guest") ...[
             const SizedBox(
               width: 6,
             ),
             reactWidget,
-            const SizedBox(width: 6,),
+            const SizedBox(
+              width: 6,
+            ),
             replyWidget,
           ],
         ],
@@ -81,7 +82,9 @@ class MessageItem extends StatelessWidget {
       children: [
         if (data.memberType == "guest") ...[
           replyWidget,
-          const SizedBox(width: 6,),
+          const SizedBox(
+            width: 6,
+          ),
           reactWidget,
           const SizedBox(
             width: 6,
@@ -90,17 +93,24 @@ class MessageItem extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (data.quoteMessage != null)...[
+            if (data.quoteMessage != null) ...[
               Row(
                 children: [
                   RepMessageItem(data: data.quoteMessage!),
-                  const SizedBox(width: 6,),
-                  const Text("Rep by", style: TextStyle(
-                    fontSize: 12,
-                  ),)
+                  const SizedBox(
+                    width: 6,
+                  ),
+                  const Text(
+                    "Rep by",
+                    style: TextStyle(
+                      fontSize: 12,
+                    ),
+                  )
                 ],
               ),
-              const SizedBox(height: 6,),
+              const SizedBox(
+                height: 6,
+              ),
             ],
             Container(
               padding: const EdgeInsets.symmetric(
@@ -121,8 +131,9 @@ class MessageItem extends StatelessWidget {
                     (data.content ?? "").decode,
                     style: TextStyle(
                       fontSize: 16,
-                      color:
-                      data.memberType != "guest" ? Colors.black : Colors.white,
+                      color: data.memberType != "guest"
+                          ? Colors.black
+                          : Colors.white,
                     ),
                   ),
                   reactionWidget
@@ -156,6 +167,14 @@ class MessageItem extends StatelessWidget {
         shrinkWrap: true,
         itemBuilder: (context, index) {
           final item = data.multimedias![index];
+          if (data.type == "sticker") {
+            return AspectRatio(
+              aspectRatio: 1,
+              child: Image.network(
+                item.url ?? "",
+              ),
+            );
+          }
           return GestureDetector(
             onTap: () {
               final file =
@@ -327,8 +346,7 @@ class MessageItem extends StatelessWidget {
               width: 1,
             );
           },
-          itemCount:
-          data.reactions!.length > 5 ? 5 : data.reactions!.length,
+          itemCount: data.reactions!.length > 5 ? 5 : data.reactions!.length,
         ),
       );
     }

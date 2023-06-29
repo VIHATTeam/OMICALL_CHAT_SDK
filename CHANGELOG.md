@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.4
+- Allow to send sticker
+
 ## 0.0.3
 - Fix cast error on 3.3.10
 

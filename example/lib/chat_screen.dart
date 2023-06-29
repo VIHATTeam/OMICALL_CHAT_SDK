@@ -552,6 +552,65 @@ class ChatState extends State<ChatScreen> {
                 ),
               ),
               const SizedBox(
+                width: 12,
+              ),
+              GestureDetector(
+                onTap: () async {
+                  try {
+                    EasyLoading.show();
+                    final sendingMessage =
+                    LiveTalkSendingMessage.createSendSticker(
+                      sticker: _controller.text,
+                    );
+                    await LiveTalkSdk.shareInstance.sendMessage(sendingMessage);
+                    if (_repMessage != null) {
+                      setState(() {
+                        _repMessage = null;
+                      });
+                    }
+                    _controller.clear();
+                    EasyLoading.dismiss();
+                  } catch (error) {
+                    EasyLoading.dismiss();
+                    if (error is LiveTalkError) {
+                      showCustomDialog(
+                        context: context,
+                        message: error.message["message"] as String,
+                      );
+                    }
+                  }
+                },
+                child: Container(
+                  height: 40,
+                  width: 40,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.teal,
+                        Colors.teal[200]!,
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(25),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black12,
+                        offset: Offset(5, 5),
+                        blurRadius: 10,
+                      )
+                    ],
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.sticky_note_2,
+                      size: 24,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(
                 width: 16,
               ),
             ],
