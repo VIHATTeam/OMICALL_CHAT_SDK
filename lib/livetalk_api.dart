@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:livetalk_sdk/livetalk_file_utils.dart';
 import 'package:livetalk_sdk/livetalk_string_utils.dart';
 import 'package:http_parser/http_parser.dart';
+import 'package:mime/mime.dart';
 import 'entity/entity.dart';
 
 class LiveTalkApi {
@@ -280,11 +281,12 @@ class LiveTalkApi {
       Uri.parse('$_baseUrl/message/guest_send_media'),
     );
     for (var path in paths) {
+      final mimeType = lookupMimeType(path);
       request.files.add(
         await http.MultipartFile.fromPath(
           'files',
           path,
-          contentType: MediaType.parse("application/image"),
+          contentType: mimeType != null ? MediaType.parse(mimeType) : null,
         ),
       );
     }
