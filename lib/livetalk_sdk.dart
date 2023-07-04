@@ -12,6 +12,7 @@ class LiveTalkSdk {
 
   static LiveTalkSdk get shareInstance => _instance!;
   final String fileUrl = 'https://cdn.omicrm.com/crm/';
+  Timer? _limitTimer;
 
   LiveTalkSdk({required this.domainPbx}) {
     LiveTalkApi.instance.getConfig(domainPbx);
@@ -29,9 +30,12 @@ class LiveTalkSdk {
     String? domain,
   }) async {
     try {
-      final sdkInfo = LiveTalkApi.instance.sdkInfo;
+      var sdkInfo = LiveTalkApi.instance.sdkInfo;
       if (sdkInfo == null) {
-        throw LiveTalkError(message: {"message": "empty_info"});
+        sdkInfo = await LiveTalkApi.instance.getConfig(domainPbx);
+        if (sdkInfo == null) {
+          throw LiveTalkError(message: {"message": "empty_info"});
+        }
       }
       if (phone.isValidMobilePhone == false) {
         throw LiveTalkError(message: {"message": "invalid_phone"});
@@ -83,7 +87,22 @@ class LiveTalkSdk {
   }
 
   Future<bool> sendMessage(LiveTalkSendingMessage message) async {
-    return await LiveTalkApi.instance.sendMessage(message);
+    if (_limitTimer != null) {
+      throw LiveTalkError(message: {
+        "message": "spam_error",
+      });
+    }
+    _limitTimer = Timer(const Duration(milliseconds: 300), () {});
+    try {
+      final result = await LiveTalkApi.instance.sendMessage(message);
+      _limitTimer?.cancel();
+      _limitTimer = null;
+      return result;
+    } catch (error) {
+      _limitTimer?.cancel();
+      _limitTimer = null;
+      rethrow;
+    }
   }
 
   Future<bool> actionOnMessage({

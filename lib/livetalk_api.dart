@@ -1,10 +1,11 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:livetalk_sdk/livetalk_file_utils.dart';
 import 'package:livetalk_sdk/livetalk_string_utils.dart';
-
+import 'package:http_parser/http_parser.dart';
 import 'entity/entity.dart';
 
 class LiveTalkApi {
@@ -13,7 +14,7 @@ class LiveTalkApi {
   static final instance = LiveTalkApi._();
   Map<String, String>? _sdkInfo;
 
-  Map<String, String>? get sdkInfo => _sdkInfo;
+  Map<String, dynamic>? get sdkInfo => _sdkInfo;
   final String _baseUrl = 'https://livetalk-v2-stg.omicrm.com/widget';
 
   Future<Map<String, dynamic>?> getConfig(String domainPbx) async {
@@ -118,7 +119,6 @@ class LiveTalkApi {
       rethrow;
     }
   }
-
 
   Future<bool> sendMessage(LiveTalkSendingMessage message) async {
     final messageTxt = message.message;
@@ -260,6 +260,9 @@ class LiveTalkApi {
     if (paths.isEmpty == true) {
       return true;
     }
+    if (paths.length > 6) {
+      throw LiveTalkError(message: {"message": "out_of_limitation"});
+    }
     final files = paths.map((e) => File(e)).toList();
     final totalSize = files.fold<double>(
       0.0,
@@ -277,7 +280,13 @@ class LiveTalkApi {
       Uri.parse('$_baseUrl/message/guest_send_media'),
     );
     for (var path in paths) {
-      request.files.add(await http.MultipartFile.fromPath('files', path));
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'files',
+          path,
+          contentType: MediaType.parse("application/image"),
+        ),
+      );
     }
     request.fields.addAll({
       "uuid": _sdkInfo!["uuid"] ?? "",

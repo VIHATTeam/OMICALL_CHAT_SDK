@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.5
+- We limit timer for message sending
+- Change content-type image
+- Refresh config information
+
 ## 0.0.4
 - Allow to send sticker
 
