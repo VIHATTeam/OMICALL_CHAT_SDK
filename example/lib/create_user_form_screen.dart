@@ -1,3 +1,4 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:livetalk_sdk/entity/entity.dart';
@@ -43,6 +44,20 @@ class _CreateUserFormState extends State<CreateUserFormScreen> {
   @override
   void initState() {
     super.initState();
+    requestFCM();
+  }
+
+  Future<void> requestFCM() async {
+    await FirebaseMessaging.instance.requestPermission(
+      alert: false,
+      badge: false,
+      sound: false,
+    );
+    final token = await FirebaseMessaging.instance.getToken();
+    debugPrint(token);
+    FirebaseMessaging.onMessage.listen((event) {
+      debugPrint(event.data.toString());
+    });
   }
 
   @override

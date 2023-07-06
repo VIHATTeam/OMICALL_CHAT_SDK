@@ -16,6 +16,7 @@ dependencies:
   uuid: ^3.0.7
   http_parser: ^4.0.2
   mime: ^1.0.4
+  flutter_uploader: ^3.0.0-beta.4
 
 dev_dependencies:
   flutter_test:

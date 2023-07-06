@@ -485,8 +485,6 @@ class ChatState extends State<ChatScreen> {
                             List<Media>? res = await ImagesPicker.pick(
                               count: 3,
                               pickType: PickType.all,
-                              maxSize: 512,
-                              quality: Platform.isAndroid ? 0.5 : 1,
                             );
                             if (res?.isNotEmpty == true) {
                               EasyLoading.show();

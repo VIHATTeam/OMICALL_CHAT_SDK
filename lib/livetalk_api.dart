@@ -121,7 +121,7 @@ class LiveTalkApi {
     }
   }
 
-  Future<bool> sendMessage(LiveTalkSendingMessage message) async {
+  Future<Map<String, dynamic>?> sendMessage(LiveTalkSendingMessage message) async {
     final messageTxt = message.message;
     final quoteId = message.quoteId;
     final sticker = message.sticker;
@@ -135,10 +135,10 @@ class LiveTalkApi {
     if (paths != null) {
       return _sendFiles(paths: paths);
     }
-    return false;
+    return null;
   }
 
-  Future<bool> _sendSticker({
+  Future<Map<String, dynamic>?> _sendSticker({
     required String sticker,
   }) async {
     if (sdkInfo == null) {
@@ -170,12 +170,12 @@ class LiveTalkApi {
       if (jsonData["status_code"] == -9999) {
         throw LiveTalkError(message: jsonData);
       }
-      return true;
+      return jsonData["payload"];
     }
-    return false;
+    return null;
   }
 
-  Future<bool> _sendText({
+  Future<Map<String, dynamic>?> _sendText({
     required String message,
     String? quoteId,
   }) async {
@@ -210,9 +210,9 @@ class LiveTalkApi {
       if (jsonData["status_code"] == -9999) {
         throw LiveTalkError(message: jsonData);
       }
-      return true;
+      return jsonData["payload"];
     }
-    return false;
+    return null;
   }
 
   Future<bool> actionOnMessage({
@@ -254,12 +254,12 @@ class LiveTalkApi {
     return false;
   }
 
-  Future<bool> _sendFiles({required List<String> paths}) async {
+  Future<Map<String, dynamic>?> _sendFiles({required List<String> paths}) async {
     if (sdkInfo == null) {
       throw LiveTalkError(message: {"message": "empty_info"});
     }
     if (paths.isEmpty == true) {
-      return true;
+      throw LiveTalkError(message: {"message": "empty_paths"});
     }
     if (paths.length > 6) {
       throw LiveTalkError(message: {"message": "out_of_limitation"});
@@ -269,8 +269,8 @@ class LiveTalkApi {
       0.0,
       (previousValue, element) => previousValue + element.fileSize,
     );
-    if (totalSize > 100) {
-      throw LiveTalkError(message: {"message": "limit_100mb"});
+    if (totalSize > 50) {
+      throw LiveTalkError(message: {"message": "limit_50mb"});
     }
     var headers = {
       'Content-Type': 'multipart/form-data',
@@ -310,9 +310,9 @@ class LiveTalkApi {
       if (jsonData["status_code"] == -9999) {
         throw LiveTalkError(message: jsonData);
       }
-      return true;
+      return jsonData["payload"];
     }
-    return false;
+    return null;
   }
 
   Future<List<LiveTalkMessageEntity>> getMessageHistory({

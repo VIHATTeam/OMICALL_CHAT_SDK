@@ -86,7 +86,7 @@ class LiveTalkSdk {
     return await LiveTalkApi.instance.getCurrentRoom();
   }
 
-  Future<bool> sendMessage(LiveTalkSendingMessage message) async {
+  Future<Map<String, dynamic>?> sendMessage(LiveTalkSendingMessage message) async {
     if (_limitTimer != null) {
       throw LiveTalkError(message: {
         "message": "spam_error",

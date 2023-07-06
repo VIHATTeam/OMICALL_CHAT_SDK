@@ -32,6 +32,7 @@
 	<true/>
 	<key>UIBackgroundModes</key>
 	<array>
+		<string>fetch</string>
 		<string>processing</string>
 		<string>remote-notification</string>
 	</array>
@@ -54,5 +55,11 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+    <key>FUMaximumConnectionsPerHost</key>
+    <integer>3</integer>
+    <key>FUMaximumUploadOperation</key>
+    <integer>3</integer>
+    <key>FUTimeoutInSeconds</key>
+    <integer>3600</integer>
 </dict>
 </plist>

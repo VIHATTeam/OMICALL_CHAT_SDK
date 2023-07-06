@@ -19,7 +19,7 @@ extension StringExtension on String {
       return false;
     }
     final type = extension.replaceAll(".", "").toLowerCase();
-    if (type == "mp4") {
+    if (type == "mp4" || type == 'mov') {
       return true;
     }
     return false;
