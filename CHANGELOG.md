@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.6
+- Support to upload files on background
+- Return message 
+- Update document and sample
+
 ## 0.0.5
 - We limit timer for message sending
 - Change content-type image

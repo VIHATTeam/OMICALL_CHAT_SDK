@@ -1,10 +1,38 @@
 import 'dart:async';
+import 'dart:convert';
 
+import 'package:flutter/material.dart';
+import 'package:flutter_uploader/flutter_uploader.dart';
 import 'package:livetalk_sdk/livetalk_api.dart';
 import 'package:livetalk_sdk/livetalk_socket_manager.dart';
 import 'package:livetalk_sdk/livetalk_string_utils.dart';
-
 import 'entity/entity.dart';
+
+void backgroundHandler() {
+  WidgetsFlutterBinding.ensureInitialized();
+  FlutterUploader uploader = FlutterUploader();
+  uploader.result.listen((result) {
+    _processMessage(result);
+  });
+}
+
+void _processMessage(UploadTaskResponse result) {
+  final taskId = result.taskId;
+  final status = result.status;
+  final data = result.response;
+  Map<String, dynamic>? message;
+  if (data != null && status == UploadTaskStatus.complete) {
+    message = jsonDecode(data);
+  }
+  _sendMessageController.add({
+    "status": status?.value ?? 0,
+    "taskId": taskId,
+    "message": message,
+  });
+}
+
+final StreamController<Map<String, dynamic>> _sendMessageController =
+    StreamController.broadcast();
 
 class LiveTalkSdk {
   final String domainPbx;
@@ -14,9 +42,17 @@ class LiveTalkSdk {
   final String fileUrl = 'https://cdn.omicrm.com/crm/';
   Timer? _limitTimer;
 
+  // UploadFileCallback? uploadFileProcess;
+  Stream<Map<String, dynamic>> get uploadFileStream =>
+      _sendMessageController.stream;
+
   LiveTalkSdk({required this.domainPbx}) {
     LiveTalkApi.instance.getConfig(domainPbx);
     _instance = this;
+    FlutterUploader().setBackgroundHandler(backgroundHandler);
+    FlutterUploader().result.listen((result) {
+      _processMessage(result);
+    });
   }
 
   Stream<LiveTalkEventEntity> get eventStream =>
@@ -86,7 +122,8 @@ class LiveTalkSdk {
     return await LiveTalkApi.instance.getCurrentRoom();
   }
 
-  Future<Map<String, dynamic>?> sendMessage(LiveTalkSendingMessage message) async {
+  Future<Map<String, dynamic>?> sendMessage(
+      LiveTalkSendingMessage message) async {
     if (_limitTimer != null) {
       throw LiveTalkError(message: {
         "message": "spam_error",

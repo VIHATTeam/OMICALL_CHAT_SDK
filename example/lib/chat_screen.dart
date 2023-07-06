@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
@@ -34,6 +33,8 @@ class ChatState extends State<ChatScreen> {
   List<LiveTalkMessageEntity> messages = [];
   bool isLoading = false;
   late StreamSubscription<LiveTalkEventEntity> _messageSubscription;
+  late StreamSubscription<Map<String, dynamic>> _uploadFileSubscription;
+
   bool isTyping = false;
   bool isAdminOnline = false;
   final FocusNode focusNode = FocusNode();
@@ -44,6 +45,13 @@ class ChatState extends State<ChatScreen> {
   void initState() {
     initData();
     super.initState();
+    _uploadFileSubscription = LiveTalkSdk.shareInstance.uploadFileStream.listen((event) {
+      int status = event["status"];
+      debugPrint("taskId ${event["taskId"]}");
+      if (status >= 3) {
+        EasyLoading.dismiss();
+      }
+    });
     _messageSubscription =
         LiveTalkSdk.shareInstance.eventStream.listen((result) {
       final event = result.eventName;
@@ -129,6 +137,7 @@ class ChatState extends State<ChatScreen> {
     _refreshController.dispose();
     _controller.dispose();
     _messageSubscription.cancel();
+    _uploadFileSubscription.cancel();
     LiveTalkSdk.shareInstance.disconnect();
     super.dispose();
   }
@@ -460,10 +469,10 @@ class ChatState extends State<ChatScreen> {
                                     LiveTalkSendingMessage.createTxtSendFiles(
                                   paths: result.paths.cast<String>(),
                                 );
-                                await LiveTalkSdk.shareInstance.sendMessage(
+                                final taskResponse = await LiveTalkSdk.shareInstance.sendMessage(
                                   sendingMessage,
                                 );
-                                EasyLoading.dismiss();
+                                debugPrint(taskResponse?.toString());
                               } catch (error) {
                                 if (error is LiveTalkError) {
                                   EasyLoading.dismiss();
@@ -493,8 +502,9 @@ class ChatState extends State<ChatScreen> {
                                 LiveTalkSendingMessage.createTxtSendFiles(
                                   paths: res!.map((e) => e.path).toList(),
                                 );
-                                await LiveTalkSdk.shareInstance.sendMessage(sendingMessage);
-                                EasyLoading.dismiss();
+                                final taskResponse = await LiveTalkSdk.shareInstance.sendMessage(sendingMessage);
+                                debugPrint(taskResponse?.toString());
+                                // EasyLoading.dismiss();
                               } catch (error) {
                                 if (error is LiveTalkError) {
                                   EasyLoading.dismiss();

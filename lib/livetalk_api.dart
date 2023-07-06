@@ -2,11 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter_uploader/flutter_uploader.dart';
 import 'package:http/http.dart' as http;
 import 'package:livetalk_sdk/livetalk_file_utils.dart';
 import 'package:livetalk_sdk/livetalk_string_utils.dart';
-import 'package:http_parser/http_parser.dart';
-import 'package:mime/mime.dart';
+
 import 'entity/entity.dart';
 
 class LiveTalkApi {
@@ -273,46 +273,48 @@ class LiveTalkApi {
       throw LiveTalkError(message: {"message": "limit_50mb"});
     }
     var headers = {
-      'Content-Type': 'multipart/form-data',
       'Authorization': "Bearer ${_sdkInfo!["access_token"] as String}",
     };
-    var request = http.MultipartRequest(
-      'POST',
-      Uri.parse('$_baseUrl/message/guest_send_media'),
-    );
+    List<FileItem> fileItems = [];
     for (var path in paths) {
-      final mimeType = lookupMimeType(path);
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'files',
-          path,
-          contentType: mimeType != null ? MediaType.parse(mimeType) : null,
-        ),
-      );
+      // File file = File(path);
+      fileItems.add(FileItem(path: path, field: "files"));
     }
-    request.fields.addAll({
-      "uuid": _sdkInfo!["uuid"] ?? "",
-      "room_id": _sdkInfo!["room_id"] ?? "",
-    });
-    request.headers.addAll(headers);
-    http.StreamedResponse response = await request.send().timeout(
-      const Duration(seconds: 600),
-      onTimeout: () {
-        throw throw LiveTalkError(message: "timeout");
-      },
+
+    final taskId = await FlutterUploader().enqueue(
+      MultipartFormDataUpload(
+        url: '$_baseUrl/message/guest_send_media', // required: url to upload to
+        files: fileItems, // r
+        method: UploadMethod.POST, // HTTP method  (POST or PUT or PATCH)
+        headers: headers,
+        tag: 'upload',
+        data: {
+          "uuid": _sdkInfo!["uuid"] ?? "",
+          "room_id": _sdkInfo!["room_id"] ?? "",
+        },
+      ),
     );
-    if ((response.statusCode ~/ 100) > 2) {
-      throw LiveTalkError(message: {"message": response.reasonPhrase});
-    }
-    if (response.statusCode == 200) {
-      final data = await response.stream.bytesToString();
-      final jsonData = json.decode(data);
-      if (jsonData["status_code"] == -9999) {
-        throw LiveTalkError(message: jsonData);
-      }
-      return jsonData["payload"];
-    }
-    return null;
+    return {
+      "task_id": taskId,
+    };
+    // http.StreamedResponse response = await request.send().timeout(
+    //   const Duration(seconds: 600),
+    //   onTimeout: () {
+    //     throw throw LiveTalkError(message: "timeout");
+    //   },
+    // );
+    // if ((response.statusCode ~/ 100) > 2) {
+    //   throw LiveTalkError(message: {"message": response.reasonPhrase});
+    // }
+    // if (response.statusCode == 200) {
+    //   final data = await response.stream.bytesToString();
+    //   final jsonData = json.decode(data);
+    //   if (jsonData["status_code"] == -9999) {
+    //     throw LiveTalkError(message: jsonData);
+    //   }
+    //   return jsonData["payload"];
+    // }
+    // return null;
   }
 
   Future<List<LiveTalkMessageEntity>> getMessageHistory({

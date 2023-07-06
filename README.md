@@ -20,6 +20,8 @@ LiveTalkSdk(domainPbx: "${your domain => provide by Omi, contact my sales to rec
 - If you implemented omikit_flutter_plugin. Your domain is `realm` in omikit_flutter_plugin.
 ```
 
+- We use <a href="https://github.com/fluttercommunity/flutter_uploader">flutter_uploader</a> to upload files. You need see it to config on your project.
+
 ## Implement
 - Create the room for chat:
 ```
@@ -124,9 +126,21 @@ try {
 Parameters:
 - paths: path of files
 Notes:
-- We limited 100 mb for each file sending.
+- We limited 50 mb for each file sending.
 - You can send image/video,word,pdf...... file type. We can support all.
 - If result is OK, you will receive event from socket.
+- New change: We will return `taskId` in result. You can use it to compare with callback and update UI.
+```
+
+- Listen file sending response:
+```
+final subscription = LiveTalkSdk.shareInstance.uploadFileStream.listen((event) {
+});
+Notes: 
+- we will return status, taskId, and data
+- status: UploadTaskStatus by flutter_uploader
+- taskId: use compare with initial id
+- data: if result is success, data is message.
 ```
 
 - Remove message:
@@ -165,10 +179,10 @@ With:
 ```
 
 - Events:
-    -  `message`: have a new message. You will receive message data in data field. Message data is same type with `getMessageHistory` api.
-    - `someone_typing`: admin is typing/untyping message. We send `isTyping` into data field. You use to show typing/untyping.
-    - `member_join`: admin joined guest chat => you need refresh room information.
-    - `member_disconnect`: admin offlined.
-    - `member_connect`: admin online.
-    - `lt_reaction`: have reaction on message. We will send `msg_id` and `reactions` in data field, you use to find and update on your message list.
-    - `remove_message`: a message removed. We will send `message_id` in data fields, you use to find and remove it on your message list.
+  -  `message`: have a new message. You will receive message data in data field. Message data is same type with `getMessageHistory` api.
+  - `someone_typing`: admin is typing/untyping message. We send `isTyping` into data field. You use to show typing/untyping.
+  - `member_join`: admin joined guest chat => you need refresh room information.
+  - `member_disconnect`: admin offlined.
+  - `member_connect`: admin online.
+  - `lt_reaction`: have reaction on message. We will send `msg_id` and `reactions` in data field, you use to find and update on your message list.
+  - `remove_message`: a message removed. We will send `message_id` in data fields, you use to find and remove it on your message list.
