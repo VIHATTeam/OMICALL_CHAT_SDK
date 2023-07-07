@@ -61,5 +61,15 @@
     <integer>3</integer>
     <key>FUTimeoutInSeconds</key>
     <integer>3600</integer>
+    <key>FirebaseAppDelegateProxyEnabled</key>
+    <false/>
+    <key>ITSAppUsesNonExemptEncryption</key>
+    <false/>
+    <key>NSBonjourServices</key>
+    <array>
+        <string>_dartobservatory._tcp</string>
+    </array>
+    <key>UIUserInterfaceStyle</key>
+    <string>Light</string>
 </dict>
 </plist>

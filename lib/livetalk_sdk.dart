@@ -1,11 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_uploader/flutter_uploader.dart';
 import 'package:livetalk_sdk/livetalk_api.dart';
 import 'package:livetalk_sdk/livetalk_socket_manager.dart';
 import 'package:livetalk_sdk/livetalk_string_utils.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'entity/entity.dart';
 
 void backgroundHandler() {
@@ -80,11 +85,32 @@ class LiveTalkSdk {
       if (geo == null) {
         throw LiveTalkError(message: {"message": "invalid_ip"});
       }
+      DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
+      final deviceInfo = await deviceInfoPlugin.deviceInfo;
+      String id = "";
+      if (deviceInfo is IosDeviceInfo) {
+        id = deviceInfo.identifierForVendor ?? "";
+      }
+      if (deviceInfo is AndroidDeviceInfo) {
+        id = deviceInfo.id;
+      }
+      PackageInfo packageInfo = await PackageInfo.fromPlatform();
+      String packageName = packageInfo.packageName;
+      final fcm = await FirebaseMessaging.instance.getToken();
+      final apns = await FirebaseMessaging.instance.getAPNSToken();
       final body = {
         "uuid": uuid,
         "start_type": "script",
         "tenant_id": sdkInfo["tenant_id"],
         "auto_expired": autoExpired,
+        "app_id": packageName,
+        "device_info": {
+          "device_id": id,
+          "token": fcm,
+          "device_type": Platform.isIOS ? "IOS" : "ANDROID",
+          "voip_token": "",
+          "app_env": kDebugMode ? "2" : "1",
+        },
         "guest_info": {
           "uuid": uuid,
           "phone": phone,

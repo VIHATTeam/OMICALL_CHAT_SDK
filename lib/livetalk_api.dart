@@ -6,7 +6,7 @@ import 'package:flutter_uploader/flutter_uploader.dart';
 import 'package:http/http.dart' as http;
 import 'package:livetalk_sdk/livetalk_file_utils.dart';
 import 'package:livetalk_sdk/livetalk_string_utils.dart';
-
+import 'dart:math' as math;
 import 'entity/entity.dart';
 
 class LiveTalkApi {
@@ -52,6 +52,20 @@ class LiveTalkApi {
     } catch (error) {
       rethrow;
     }
+  }
+
+  String get _uuid {
+    return "$_randomString${DateTime.now().millisecondsSinceEpoch}";
+  }
+
+  String get _randomString {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz';
+    const maxRandom = chars.length;
+    final list = List.generate(11, (index) {
+      final rNum = math.Random().nextInt(maxRandom);
+      return chars.substring(rNum, rNum + 1);
+    });
+    return list.join("");
   }
 
   Future<String?> createRoom({
@@ -155,7 +169,7 @@ class LiveTalkApi {
     final body = {
       "type": "guest",
       "url": sticker,
-      "uuid": _sdkInfo!["uuid"],
+      "uuid":_uuid,
       "room_id": _sdkInfo!["room_id"],
     };
     request.body = json.encode(body);
@@ -182,6 +196,9 @@ class LiveTalkApi {
     if (sdkInfo == null) {
       throw LiveTalkError(message: {"message": "empty_info"});
     }
+    if (message.trim().isEmpty) {
+      throw LiveTalkError(message: {"message": "empty_text"});
+    }
     var headers = {
       'Content-Type': 'application/json',
       'Authorization': "Bearer ${_sdkInfo!["access_token"] as String}",
@@ -192,7 +209,7 @@ class LiveTalkApi {
     );
     final body = {
       "content": message.encode,
-      "uuid": _sdkInfo!["uuid"],
+      "uuid": _uuid,
       "room_id": _sdkInfo!["room_id"],
     };
     if (quoteId != null) {
@@ -233,7 +250,7 @@ class LiveTalkApi {
     );
     request.body = json.encode({
       "content": content,
-      "uuid": _sdkInfo!["uuid"],
+      "uuid": _uuid,
       "ref_id": id,
       "room_id": _sdkInfo!["room_id"],
       "action": action,
@@ -289,7 +306,7 @@ class LiveTalkApi {
         headers: headers,
         tag: 'upload',
         data: {
-          "uuid": _sdkInfo!["uuid"] ?? "",
+          "uuid": _uuid,
           "room_id": _sdkInfo!["room_id"] ?? "",
         },
       ),

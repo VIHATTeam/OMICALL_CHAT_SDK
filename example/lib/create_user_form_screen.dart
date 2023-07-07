@@ -19,9 +19,9 @@ class CreateUserFormScreen extends StatefulWidget {
 class _CreateUserFormState extends State<CreateUserFormScreen> {
   //video
   late final TextEditingController _userNameController = TextEditingController()
-    ..text = "N 0383736383";
+    ..text = "N 0383736390";
   late final TextEditingController _phoneController = TextEditingController()
-    ..text = '0383736383';
+    ..text = '0383736390';
   late final TextEditingController _emailController = TextEditingController()
     ..text = '';
 
@@ -49,6 +49,11 @@ class _CreateUserFormState extends State<CreateUserFormScreen> {
 
   Future<void> requestFCM() async {
     await FirebaseMessaging.instance.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+    await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
       alert: false,
       badge: false,
       sound: false,
@@ -56,6 +61,7 @@ class _CreateUserFormState extends State<CreateUserFormScreen> {
     final token = await FirebaseMessaging.instance.getToken();
     debugPrint(token);
     FirebaseMessaging.onMessage.listen((event) {
+      //have message on foreground => by pass notification
       debugPrint(event.data.toString());
     });
   }

@@ -16,6 +16,9 @@ dependencies:
   uuid: ^3.0.7
   flutter_uploader: ^3.0.0-beta.4
   path: ^1.8.2
+  device_info_plus: ^9.0.2
+  package_info_plus: ^4.0.2
+  firebase_messaging: ^14.6.0
 
 dev_dependencies:
   flutter_test:
