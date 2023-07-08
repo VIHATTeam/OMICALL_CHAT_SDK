@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.7
+- Support message notification
+- Update document and sample
+
 ## 0.0.6
 - Support to upload files on background
 - Return message 

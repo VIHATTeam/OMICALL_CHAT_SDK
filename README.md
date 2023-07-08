@@ -22,6 +22,8 @@ LiveTalkSdk(domainPbx: "${your domain => provide by Omi, contact my sales to rec
 
 - We use <a href="https://github.com/fluttercommunity/flutter_uploader">flutter_uploader</a> to upload files. You need see it to config on your project.
 
+- We use <a href="https://pub.dev/packages/firebase_messaging">firebase_messaging</a> to show notification. You need setup it.
+
 ## Implement
 - Create the room for chat:
 ```
