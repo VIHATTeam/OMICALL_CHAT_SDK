@@ -113,7 +113,7 @@ class LiveTalkApi {
       };
       var request = http.Request(
         'GET',
-        Uri.parse('$_baseUrl//guest/room/${_sdkInfo!["room_id"]}'),
+        Uri.parse('$_baseUrl/guest/room/${_sdkInfo!["room_id"]}'),
       );
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
@@ -135,7 +135,8 @@ class LiveTalkApi {
     }
   }
 
-  Future<Map<String, dynamic>?> sendMessage(LiveTalkSendingMessage message) async {
+  Future<Map<String, dynamic>?> sendMessage(
+      LiveTalkSendingMessage message) async {
     final messageTxt = message.message;
     final quoteId = message.quoteId;
     final sticker = message.sticker;
@@ -169,7 +170,7 @@ class LiveTalkApi {
     final body = {
       "type": "guest",
       "url": sticker,
-      "uuid":_uuid,
+      "uuid": _uuid,
       "room_id": _sdkInfo!["room_id"],
     };
     request.body = json.encode(body);
@@ -271,7 +272,8 @@ class LiveTalkApi {
     return false;
   }
 
-  Future<Map<String, dynamic>?> _sendFiles({required List<String> paths}) async {
+  Future<Map<String, dynamic>?> _sendFiles(
+      {required List<String> paths}) async {
     if (sdkInfo == null) {
       throw LiveTalkError(message: {"message": "empty_info"});
     }
@@ -300,9 +302,12 @@ class LiveTalkApi {
 
     final taskId = await FlutterUploader().enqueue(
       MultipartFormDataUpload(
-        url: '$_baseUrl/message/guest_send_media', // required: url to upload to
-        files: fileItems, // r
-        method: UploadMethod.POST, // HTTP method  (POST or PUT or PATCH)
+        url: '$_baseUrl/message/guest_send_media',
+        // required: url to upload to
+        files: fileItems,
+        // r
+        method: UploadMethod.POST,
+        // HTTP method  (POST or PUT or PATCH)
         headers: headers,
         tag: 'upload',
         data: {
@@ -425,5 +430,39 @@ class LiveTalkApi {
       return result;
     }
     return null;
+  }
+
+  Future<bool> logout({
+    required String appId,
+    required String deviceId,
+    required String uuid,
+  }) async {
+    var headers = {
+      'Content-Type': 'application/json',
+      'Authorization': "Bearer ${_sdkInfo!["access_token"] as String}",
+    };
+    var request = http.Request(
+      'POST',
+      Uri.parse('$_baseUrl/guest/device_info/remove'),
+    );
+    request.body = json.encode({
+      "app_id": appId,
+      "device_id": deviceId,
+      "uuid": uuid,
+    });
+    request.headers.addAll(headers);
+    http.StreamedResponse response = await request.send();
+    if ((response.statusCode ~/ 100) > 2) {
+      throw LiveTalkError(message: {"message": response.reasonPhrase});
+    }
+    if (response.statusCode == 200) {
+      final data = await response.stream.bytesToString();
+      final jsonData = json.decode(data);
+      if (jsonData["status_code"] == -9999) {
+        throw LiveTalkError(message: jsonData);
+      }
+      return true;
+    }
+    return false;
   }
 }

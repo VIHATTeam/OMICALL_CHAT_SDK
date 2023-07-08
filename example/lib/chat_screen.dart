@@ -45,7 +45,8 @@ class ChatState extends State<ChatScreen> {
   void initState() {
     initData();
     super.initState();
-    _uploadFileSubscription = LiveTalkSdk.shareInstance.uploadFileStream.listen((event) {
+    _uploadFileSubscription =
+        LiveTalkSdk.shareInstance.uploadFileStream.listen((event) {
       int status = event["status"];
       debugPrint("taskId ${event["taskId"]}");
       if (status >= 3) {
@@ -188,6 +189,32 @@ class ChatState extends State<ChatScreen> {
               decoration: BoxDecoration(
                 color: isAdminOnline ? Colors.green : Colors.grey,
                 borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+          Center(
+            child: Container(
+              margin: const EdgeInsets.only(right: 16),
+              width: 24,
+              height: 24,
+              child: GestureDetector(
+                child: const Icon(
+                  Icons.logout,
+                  size: 24,
+                  color: Colors.white,
+                ),
+                onTap: () async {
+                  EasyLoading.show();
+                  await LiveTalkSdk.shareInstance.logout(uuid);
+                  EasyLoading.dismiss();
+                  if (mounted) {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                        builder: (context) => const CreateUserFormScreen(),
+                      ),
+                    );
+                  }
+                },
               ),
             ),
           )
@@ -469,7 +496,8 @@ class ChatState extends State<ChatScreen> {
                                     LiveTalkSendingMessage.createTxtSendFiles(
                                   paths: result.paths.cast<String>(),
                                 );
-                                final taskResponse = await LiveTalkSdk.shareInstance.sendMessage(
+                                final taskResponse =
+                                    await LiveTalkSdk.shareInstance.sendMessage(
                                   sendingMessage,
                                 );
                                 debugPrint(taskResponse?.toString());
@@ -499,10 +527,12 @@ class ChatState extends State<ChatScreen> {
                               EasyLoading.show();
                               try {
                                 final sendingMessage =
-                                LiveTalkSendingMessage.createTxtSendFiles(
+                                    LiveTalkSendingMessage.createTxtSendFiles(
                                   paths: res!.map((e) => e.path).toList(),
                                 );
-                                final taskResponse = await LiveTalkSdk.shareInstance.sendMessage(sendingMessage);
+                                final taskResponse = await LiveTalkSdk
+                                    .shareInstance
+                                    .sendMessage(sendingMessage);
                                 debugPrint(taskResponse?.toString());
                                 // EasyLoading.dismiss();
                               } catch (error) {
@@ -567,7 +597,7 @@ class ChatState extends State<ChatScreen> {
                   try {
                     EasyLoading.show();
                     final sendingMessage =
-                    LiveTalkSendingMessage.createSendSticker(
+                        LiveTalkSendingMessage.createSendSticker(
                       sticker: _controller.text,
                     );
                     await LiveTalkSdk.shareInstance.sendMessage(sendingMessage);

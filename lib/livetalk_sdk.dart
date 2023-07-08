@@ -196,6 +196,25 @@ class LiveTalkSdk {
     );
   }
 
+  Future<bool> logout(String uuid) async {
+    DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
+    final deviceInfo = await deviceInfoPlugin.deviceInfo;
+    String id = "";
+    if (deviceInfo is IosDeviceInfo) {
+      id = deviceInfo.identifierForVendor ?? "";
+    }
+    if (deviceInfo is AndroidDeviceInfo) {
+      id = deviceInfo.id;
+    }
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    String packageName = packageInfo.packageName;
+    return LiveTalkApi.instance.logout(
+      appId: packageName,
+      deviceId: id,
+      uuid: uuid,
+    );
+  }
+
   void disconnect() {
     LiveTalkSocketManager.shareInstance.disconnect();
   }
