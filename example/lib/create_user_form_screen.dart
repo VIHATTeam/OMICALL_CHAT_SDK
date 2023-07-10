@@ -16,7 +16,7 @@ class CreateUserFormScreen extends StatefulWidget {
   }
 }
 
-String uuid = "0383736374";
+String uuid = "0383736376";
 
 class _CreateUserFormState extends State<CreateUserFormScreen> {
   //video
@@ -164,11 +164,13 @@ class _CreateUserFormState extends State<CreateUserFormScreen> {
                 FocusScope.of(context).unfocus();
                 try {
                   EasyLoading.show();
+                  final fcm = await FirebaseMessaging.instance.getToken();
                   final result = await LiveTalkSdk.shareInstance.createRoom(
                     phone: _phoneController.text,
                     fullName: _userNameController.text,
                     uuid: _phoneController.text,
                     autoExpired: _isAutoExpired,
+                    fcm: fcm,
                   );
                   EasyLoading.dismiss();
                   if (result != null && mounted) {

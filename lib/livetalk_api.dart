@@ -367,8 +367,10 @@ class LiveTalkApi {
         throw LiveTalkError(message: jsonData);
       }
       final items = jsonData["payload"]["items"] as List;
-      return List.generate(items.length,
-          (index) => LiveTalkMessageEntity.fromJson(items[index]));
+      return List.generate(
+        items.length,
+        (index) => LiveTalkMessageEntity.fromJson(items[index]),
+      );
     }
     return [];
   }

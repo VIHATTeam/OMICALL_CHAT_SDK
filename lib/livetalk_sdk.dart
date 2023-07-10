@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_uploader/flutter_uploader.dart';
@@ -11,6 +10,7 @@ import 'package:livetalk_sdk/livetalk_api.dart';
 import 'package:livetalk_sdk/livetalk_socket_manager.dart';
 import 'package:livetalk_sdk/livetalk_string_utils.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+
 import 'entity/entity.dart';
 
 void backgroundHandler() {
@@ -69,6 +69,7 @@ class LiveTalkSdk {
     required String uuid,
     bool autoExpired = false,
     String? domain,
+    String? fcm,
   }) async {
     try {
       var sdkInfo = LiveTalkApi.instance.sdkInfo;
@@ -96,8 +97,6 @@ class LiveTalkSdk {
       }
       PackageInfo packageInfo = await PackageInfo.fromPlatform();
       String packageName = packageInfo.packageName;
-      final fcm = await FirebaseMessaging.instance.getToken();
-      final apns = await FirebaseMessaging.instance.getAPNSToken();
       final body = {
         "uuid": uuid,
         "start_type": "script",

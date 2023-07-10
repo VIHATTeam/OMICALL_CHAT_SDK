@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.8
+- Remove firebase_message
+
 ## 0.0.7
 - Support message notification
 - Update document and sample
