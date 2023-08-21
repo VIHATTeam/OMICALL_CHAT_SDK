@@ -1,6 +1,6 @@
 name: livetalk_sdk
 description: livetalk is wrapper SDK for LiveTalk for Application easy integrate features of Omicall LikeTalk to chat/receive message.
-version: 0.0.8
+version: 0.0.9
 homepage: https://github.com/VIHATTeam/OMICALL_CHAT_SDK
 
 environment:
@@ -11,8 +11,8 @@ dependencies:
   flutter:
     sdk: flutter
   plugin_platform_interface: ^2.0.2
-  socket_io_client: 1.0.2
-  http: ^0.13.4
+  socket_io_client: 2.0.1
+  http: 0.13.5
   uuid: ^3.0.7
   flutter_uploader: ^3.0.0-beta.4
   path: ^1.8.2
