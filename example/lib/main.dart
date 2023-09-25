@@ -9,7 +9,7 @@ import 'package:livetalk_sdk_example/create_user_form_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   HttpOverrides.global = MyHttpOverrides();
-  LiveTalkSdk(domainPbx: "");
+  LiveTalkSdk(domainPbx: "hungth12");
   await Firebase.initializeApp();
   runApp(const MyApp());
 }
