@@ -7,6 +7,8 @@ import 'package:livetalk_sdk_example/extensions/string_extension.dart';
 import 'package:livetalk_sdk_example/image_preview.dart';
 import 'package:livetalk_sdk_example/video_preview.dart';
 
+import '../constants.dart';
+
 class RepMessageItem extends StatelessWidget {
   const RepMessageItem({
     super.key,
@@ -39,21 +41,18 @@ class RepMessageItem extends StatelessWidget {
       children: [
         Container(
           padding: const EdgeInsets.symmetric(
-            horizontal: 8,
-            vertical: 6,
-          ),
-          constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width / 3 * 2,
+            horizontal: kDefaultPadding * 0.75,
+            vertical: kDefaultPadding / 2,
           ),
           decoration: BoxDecoration(
             color: Colors.grey,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(30),
           ),
           child: Text(
             (data.content ?? "").decode,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 16,
-              color: data.memberType != "guest" ? Colors.black : Colors.white,
+              color: Colors.white,
             ),
           ),
         ),
