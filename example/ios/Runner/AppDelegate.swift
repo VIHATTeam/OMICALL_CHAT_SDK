@@ -16,6 +16,9 @@ func registerPlugins(registry: FlutterPluginRegistry) {
     FirebaseApp.configure()
     GeneratedPluginRegistrant.register(with: self)
     SwiftFlutterUploaderPlugin.registerPlugins = registerPlugins
+      if #available(iOS 10.0, *) {
+          UNUserNotificationCenter.current().delegate = self as? UNUserNotificationCenterDelegate
+      }
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 }
