@@ -34,6 +34,8 @@ try {
     fullName: _userNameController.text,
     uuid: _phoneController.text,
     autoExpired: _isAutoExpired,
+    fcm: // token fcm,
+    projectId: // project id off firebase
   );
   EasyLoading.dismiss();
   if (result != null && mounted) {
@@ -52,7 +54,8 @@ try {
 - autoExpired: default is false. If autoExpired is true, the room is alive only 1 day.
 - uuid: unique id.
 - domain: your domain, it will show on web admin
-
+- fcm: FCM token
+- projectId: your project id in firebase 
 => We need provide phone/uuid unique for each user.
 => If you change another uuid for user, we will create a new room.
 => If user don't have a room on my server, we will create a new room, if user room is exists, we will return current user room.

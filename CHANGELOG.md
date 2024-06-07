@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.10
+- Update params create room
+- Add show notification at example 
+
 ## 0.0.9
 - Upgrade version socket.io to V2 
 
