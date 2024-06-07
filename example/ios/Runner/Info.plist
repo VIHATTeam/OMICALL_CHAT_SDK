@@ -36,10 +36,21 @@
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_dartobservatory._tcp</string>
 	</array>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>We use your location to show notifications</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>We use your location to show notifications</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>We use your location to show notifications</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Explain why your app uses photo library</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>

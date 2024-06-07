@@ -79,6 +79,12 @@ class LiveTalkApi {
       );
       request.body = json.encode(body);
       request.headers.addAll(headers);
+
+      // // Log thông tin request
+      // print('Request URL: ${request.url}');
+      // print('Request Headers: ${request.headers}');
+      // print('Request Body: ${request.body}');
+
       http.StreamedResponse response = await request.send();
       if ((response.statusCode ~/ 100) > 2) {
         throw LiveTalkError(message: {"message": response.reasonPhrase});

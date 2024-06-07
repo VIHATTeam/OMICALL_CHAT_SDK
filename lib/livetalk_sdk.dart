@@ -70,6 +70,7 @@ class LiveTalkSdk {
     bool autoExpired = false,
     String? domain,
     String? fcm,
+    String? projectId
   }) async {
     try {
       var sdkInfo = LiveTalkApi.instance.sdkInfo;
@@ -97,12 +98,20 @@ class LiveTalkSdk {
       }
       PackageInfo packageInfo = await PackageInfo.fromPlatform();
       String packageName = packageInfo.packageName;
+
+      String projectIdTemp = "";
+      
+      if (projectId != null && projectId.isNotEmpty) {
+        projectIdTemp = projectId;
+      }
+      
       final body = {
         "uuid": uuid,
         "start_type": "script",
         "tenant_id": sdkInfo["tenant_id"],
         "auto_expired": autoExpired,
         "app_id": packageName,
+        "project_id": projectIdTemp,
         "device_info": {
           "device_id": id,
           "token": fcm,

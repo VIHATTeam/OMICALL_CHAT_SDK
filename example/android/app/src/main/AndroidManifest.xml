@@ -2,6 +2,7 @@
     package="com.vihat.livetalksdk.livetalk_sdk_example">
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
    <application
         android:label="livetalk_sdk_example"
         android:name="${applicationName}"
@@ -30,5 +31,9 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+       <service
+           android:name="com.dexterous.flutterlocalnotifications.ForegroundService"
+           android:permission="android.permission.BIND_JOB_SERVICE"
+           android:exported="true"/>
     </application>
 </manifest>
