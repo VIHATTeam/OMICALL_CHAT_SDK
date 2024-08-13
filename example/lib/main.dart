@@ -15,6 +15,11 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   print("Handling a background message: ${message.messageId}");
 }
 
+import 'page/welcome/welcome_screen.dart';
+import 'theme.dart';
+
+String uuid = "0909689867";
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   HttpOverrides.global = MyHttpOverrides();
@@ -51,12 +56,13 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-
     return GestureDetector(
       child: MaterialApp(
-        theme: ThemeData.light(),
-        home: const CreateUserFormScreen(),
         debugShowCheckedModeBanner: false,
+        theme: lightThemeData(context),
+        darkTheme: darkThemeData(context),
+        themeMode: ThemeMode.light,
+        home: const WelcomeScreen(),
         builder: EasyLoading.init(),
       ),
       onTap: () {
@@ -73,10 +79,10 @@ class MyHttpOverrides extends HttpOverrides {
   HttpClient createHttpClient(SecurityContext? context) {
     return super.createHttpClient(context)
       ..badCertificateCallback = (
-          X509Certificate cert,
-          String host,
-          int port,
-          ) {
+        X509Certificate cert,
+        String host,
+        int port,
+      ) {
         return true;
       };
   }

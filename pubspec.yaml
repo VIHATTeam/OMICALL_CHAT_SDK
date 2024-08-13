@@ -15,7 +15,7 @@ dependencies:
   http: 0.13.5
   uuid: ^3.0.7
   flutter_uploader: ^3.0.0-beta.4
-  path: ^1.8.2
+  path: any
   device_info_plus: ^9.0.2
   package_info_plus: ^4.0.2
 
