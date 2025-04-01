@@ -15,6 +15,7 @@ extension StringExtension on String {
 
   bool get isVideo {
     final extension = p.extension(this);
+    
     if (extension.isEmpty) {
       return false;
     }

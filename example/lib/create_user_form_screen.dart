@@ -1,3 +1,6 @@
+// import 'package:firebase_messaging/firebase_messaging.dart';
+import 'dart:io';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -5,6 +8,8 @@ import 'package:livetalk_sdk/entity/entity.dart';
 import 'package:livetalk_sdk/livetalk_sdk.dart';
 import 'package:livetalk_sdk_example/chat_screen.dart';
 import 'package:livetalk_sdk_example/dialog/dialog.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 
 class CreateUserFormScreen extends StatefulWidget {
   const CreateUserFormScreen({Key? key}) : super(key: key);
@@ -46,27 +51,59 @@ class _CreateUserFormState extends State<CreateUserFormScreen> {
   @override
   void initState() {
     super.initState();
-    requestFCM();
+    // requestFCM();
   }
 
-  Future<void> requestFCM() async {
-    await FirebaseMessaging.instance.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
-    await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
-      alert: false,
-      badge: false,
-      sound: false,
-    );
-    final token = await FirebaseMessaging.instance.getToken();
-    debugPrint(token);
-    FirebaseMessaging.onMessage.listen((event) {
-      //have message on foreground => by pass notification
-      debugPrint(event.data.toString());
-    });
+  // Lấy FCM token thật từ thiết bị thay vì giá trị giả
+  Future<String?> getDeviceToken() async {
+    try {
+      print('===== FCM DEBUG: getDeviceToken() called from CreateUserFormScreen =====');
+      
+      // Kiểm tra xem Firebase Messaging có sẵn không
+      if (Platform.isAndroid || Platform.isIOS) {
+        // Kích hoạt quyền thông báo nếu cần
+        await FirebaseMessaging.instance.requestPermission(
+          alert: true,
+          badge: true,
+          sound: true,
+          provisional: false,
+        );
+        
+        // Lấy token thật
+        final token = await FirebaseMessaging.instance.getToken();
+        print('===== FCM DEBUG: Received REAL FCM token: $token =====');
+        return token;
+      } else {
+        print('===== FCM DEBUG: Platform not supported for FCM, using mock token =====');
+        return "mock-token-${DateTime.now().millisecondsSinceEpoch}";
+      }
+    } catch (e) {
+      print('===== FCM DEBUG: Error getting FCM token: $e =====');
+      print('===== FCM DEBUG: Falling back to mock token =====');
+      return "mock-token-on-error-${DateTime.now().millisecondsSinceEpoch}";
+    }
   }
+
+  // Future<void> requestFCM() async {
+  //   await FirebaseMessaging.instance.requestPermission(
+  //     alert: true,
+  //     badge: true,
+  //     sound: true,
+  //   );
+    
+  //   await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+  //     alert: false,
+  //     badge: false,
+  //     sound: false,
+  //   );
+
+  //   final token = await FirebaseMessaging.instance.getToken();
+  //   debugPrint(token);
+  //   FirebaseMessaging.onMessage.listen((event) {
+  //     //have message on foreground => by pass notification
+  //     debugPrint(event.data.toString());
+  //   });
+  // }
 
   @override
   void dispose() {
@@ -163,34 +200,68 @@ class _CreateUserFormState extends State<CreateUserFormScreen> {
               onTap: () async {
                 FocusScope.of(context).unfocus();
                 try {
+                  print('\n===== Starting room creation process =====');
                   EasyLoading.show();
-                  final fcm = await FirebaseMessaging.instance.getToken();
+                  print('EasyLoading.show() called');
+                  
+                  // final fcm = await FirebaseMessaging.instance.getToken();
+                  print('Requesting FCM token');
+                  final fcm = await getDeviceToken();
+                  print('FCM token received: $fcm');
+                  
+                  print('Creating room with:');
+                  print('- Phone: ${_phoneController.text}');
+                  print('- Name: ${_userNameController.text}');
+                  print('- UUID: ${_phoneController.text}');
+                  print('- AutoExpired: $_isAutoExpired');
+                  print('- FCM: $fcm');
+                  print('- ProjectId: omicrm-6558a');
+                  
                   final result = await LiveTalkSdk.shareInstance.createRoom(
                     phone: _phoneController.text,
                     fullName: _userNameController.text,
                     uuid: _phoneController.text,
                     autoExpired: _isAutoExpired,
                     fcm: fcm,
-                      projectId: "omicrm-6558a"
+                    projectId: "omicrm-6558a"
                   );
+                  
+                  print('Room creation result: $result');
                   EasyLoading.dismiss();
+                  print('EasyLoading.dismiss() called');
+                  
                   if (result != null && mounted) {
+                    print('Navigating to ChatScreen');
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const ChatScreen(),
+                        builder: (context) => ChatScreen(
+                          roomId: result,
+                          uuid: _phoneController.text,
+                        ),
                       ),
                     );
+                    print('Navigation completed');
+                  } else {
+                    print('Result was null or widget not mounted - no navigation');
                   }
                 } catch (error) {
+                  print('Error creating room: $error');
                   EasyLoading.dismiss();
+                  print('EasyLoading.dismiss() called after error');
+                  
                   if (error is LiveTalkError) {
+                    print('LiveTalkError: ${error.message["message"]}');
                     showCustomDialog(
                       context: context,
                       message: error.message["message"] as String,
                     );
+                    print('Dialog shown');
+                  } else {
+                    print('Unknown error type: ${error.runtimeType}');
                   }
                 }
+                print('===== Room creation process completed =====\n');
               },
               child: Container(
                 height: 60,

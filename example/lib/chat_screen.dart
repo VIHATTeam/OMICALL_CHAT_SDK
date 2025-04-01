@@ -1,10 +1,9 @@
 import 'dart:async';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:images_picker/images_picker.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:livetalk_sdk/entity/entity.dart';
 import 'package:livetalk_sdk/livetalk_sdk.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
@@ -14,9 +13,19 @@ import 'dialog/dialog.dart';
 import 'items/message_item.dart';
 import 'items/rep_message_widget.dart';
 import 'reaction_widget.dart';
+import 'package:livetalk_sdk_example/socket_test_screen.dart';
 
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({super.key});
+  final String roomId;
+  final String uuid;
+  final String? title;
+
+  const ChatScreen({
+    Key? key,
+    required this.roomId,
+    required this.uuid,
+    this.title,
+  }) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
@@ -39,16 +48,18 @@ class ChatState extends State<ChatScreen> {
   bool isAdminOnline = false;
   final FocusNode focusNode = FocusNode();
   LiveTalkMessageEntity? _repMessage;
-  String? title;
+  String? titleText;
 
   @override
   void initState() {
-    initData();
     super.initState();
+    titleText = widget.title;
+    initData();
     _uploadFileSubscription =
         LiveTalkSdk.shareInstance.uploadFileStream.listen((event) {
+      debugPrint("Upload event received: $event");
+      debugPrint("task_id ${event["task_id"]}");
       int status = event["status"];
-      debugPrint("taskId ${event["taskId"]}");
       if (status >= 3) {
         EasyLoading.dismiss();
       }
@@ -114,10 +125,10 @@ class ChatState extends State<ChatScreen> {
       if (currentRoom.hasMember == true &&
           currentRoom.members?.isNotEmpty == true) {
         final member = currentRoom.members!.first;
-        title = member.fullName;
+        titleText = member.fullName;
         isAdminOnline = member.status == "online";
       } else {
-        title = "Wait accept";
+        titleText = "Wait accept";
       }
       await getMessageHistory();
       EasyLoading.dismiss();
@@ -174,50 +185,44 @@ class ChatState extends State<ChatScreen> {
     _refreshController.loadComplete();
   }
 
+  Future<void> _logout() async {
+    EasyLoading.show();
+    await LiveTalkSdk.shareInstance.logout(widget.uuid);
+    EasyLoading.dismiss();
+    if (mounted) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => const CreateUserFormScreen(),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(title ?? ""),
-        automaticallyImplyLeading: false,
+        title: Text(titleText ?? "LiveTalk SDK Demo"),
         actions: [
-          Center(
-            child: Container(
-              margin: const EdgeInsets.only(right: 16),
-              width: 16,
-              height: 16,
-              decoration: BoxDecoration(
-                color: isAdminOnline ? Colors.green : Colors.grey,
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-          ),
-          Center(
-            child: Container(
-              margin: const EdgeInsets.only(right: 16),
-              width: 24,
-              height: 24,
-              child: GestureDetector(
-                child: const Icon(
-                  Icons.logout,
-                  size: 24,
-                  color: Colors.white,
+          IconButton(
+            icon: const Icon(Icons.network_check),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SocketTestScreen(
+                    roomId: widget.roomId,
+                    uuid: widget.uuid,
+                  ),
                 ),
-                onTap: () async {
-                  EasyLoading.show();
-                  await LiveTalkSdk.shareInstance.logout(uuid);
-                  EasyLoading.dismiss();
-                  if (mounted) {
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(
-                        builder: (context) => const CreateUserFormScreen(),
-                      ),
-                    );
-                  }
-                },
-              ),
-            ),
-          )
+              );
+            },
+            tooltip: "Kiểm tra socket",
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: _logout,
+          ),
         ],
       ),
       body: Column(
@@ -487,14 +492,14 @@ class ChatState extends State<ChatScreen> {
                           child: const Text('Files'),
                           onPressed: () async {
                             Navigator.pop(dialogContext);
-                            FilePickerResult? result = await FilePicker.platform
-                                .pickFiles(allowMultiple: true);
-                            if (result != null) {
+                            final ImagePicker picker = ImagePicker();
+                            final List<XFile> images = await picker.pickMultiImage();
+                            if (images.isNotEmpty) {
                               EasyLoading.show();
                               try {
                                 final sendingMessage =
                                     LiveTalkSendingMessage.createTxtSendFiles(
-                                  paths: result.paths.cast<String>(),
+                                  paths: images.map((e) => e.path).toList(),
                                 );
                                 final taskResponse =
                                     await LiveTalkSdk.shareInstance.sendMessage(
@@ -519,22 +524,19 @@ class ChatState extends State<ChatScreen> {
                           child: const Text('Images/Videos'),
                           onPressed: () async {
                             Navigator.pop(context);
-                            List<Media>? res = await ImagesPicker.pick(
-                              count: 3,
-                              pickType: PickType.all,
-                            );
-                            if (res?.isNotEmpty == true) {
+                            final ImagePicker picker = ImagePicker();
+                            final List<XFile> images = await picker.pickMultiImage();
+                            if (images.isNotEmpty) {
                               EasyLoading.show();
                               try {
                                 final sendingMessage =
                                     LiveTalkSendingMessage.createTxtSendFiles(
-                                  paths: res!.map((e) => e.path).toList(),
+                                  paths: images.map((e) => e.path).toList(),
                                 );
                                 final taskResponse = await LiveTalkSdk
                                     .shareInstance
                                     .sendMessage(sendingMessage);
                                 debugPrint(taskResponse?.toString());
-                                // EasyLoading.dismiss();
                               } catch (error) {
                                 if (error is LiveTalkError) {
                                   EasyLoading.dismiss();

@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.12
+- Standardized documentation to match API implementation
+- Fixed inconsistencies in parameter naming (task_id vs taskId)
+- Clarified file upload status codes (2=in progress, 3=completed, 4=error)
+- Updated examples in README to accurately reflect API response format
+- Improved file upload documentation with clearer examples
+
+## 0.0.11
+- Update SDK environment from '>=2.14.0 <3.0.0' to '>=2.14.0 <4.0.0' for Dart 3 compatibility
+- Replace flutter_uploader with Dio for file uploads, removing external dependency
+- Improve file upload handling and progress monitoring
+- Remove unnecessary print statements to improve performance
+- Improve socket connection handling and stability
+- Enhance error handling in API requests
+- Standardize socket event naming
+- Fix socket initialization with proper disposal of previous connections
+- Optimize code for better SDK integration
+- Fix potential memory leaks in socket connections
+
 ## 0.0.10
 - Update params create room
 - Add show notification at example 

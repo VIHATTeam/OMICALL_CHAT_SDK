@@ -1,6 +1,6 @@
-# livetalk_sdk_example
+# example
 
-Demonstrates how to use the livetalk_sdk plugin.
+A new Flutter project.
 
 ## Getting Started
 

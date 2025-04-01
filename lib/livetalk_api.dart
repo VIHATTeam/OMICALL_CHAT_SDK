@@ -2,10 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter_uploader/flutter_uploader.dart';
+import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 import 'package:livetalk_sdk/livetalk_file_utils.dart';
 import 'package:livetalk_sdk/livetalk_string_utils.dart';
+import 'package:uuid/uuid.dart';
 import 'dart:math' as math;
 import 'entity/entity.dart';
 
@@ -14,6 +15,11 @@ class LiveTalkApi {
 
   static final instance = LiveTalkApi._();
   Map<String, String>? _sdkInfo;
+  final Dio _dio = Dio();
+  final StreamController<Map<String, dynamic>> _uploadProgressController = StreamController<Map<String, dynamic>>.broadcast();
+  final Uuid _uuidGenerator = const Uuid();
+
+  Stream<Map<String, dynamic>> get uploadStream => _uploadProgressController.stream;
 
   Map<String, dynamic>? get sdkInfo => _sdkInfo;
   final String _baseUrl = 'https://livetalk-v2-stg.omicrm.com/widget';
@@ -21,20 +27,24 @@ class LiveTalkApi {
   Future<Map<String, dynamic>?> getConfig(String domainPbx) async {
     try {
       var headers = {'Content-Type': 'application/json'};
-      var request = http.Request(
-        'POST',
+      
+      final response = await http.post(
         Uri.parse('$_baseUrl/config/get/$domainPbx'),
+        headers: headers,
+        body: json.encode({}),
       );
-      request.body = json.encode({});
-      request.headers.addAll(headers);
-      http.StreamedResponse response = await request.send();
+      
       if ((response.statusCode ~/ 100) > 2) {
+        print('❌ Config Error: ${response.reasonPhrase}');
         throw LiveTalkError(message: {"message": response.reasonPhrase});
       }
+      
       if (response.statusCode == 200) {
-        final data = await response.stream.bytesToString();
+        final data = response.body;
+        
         final jsonData = json.decode(data);
         if (jsonData["status_code"] == -9999) {
+          print('❌ Config API Error: ${jsonData["message"]}');
           throw LiveTalkError(message: jsonData);
         }
         final payload = jsonData["payload"];
@@ -50,12 +60,13 @@ class LiveTalkApi {
       }
       return null;
     } catch (error) {
+      print('❌ Exception during getConfig: $error');
       rethrow;
     }
   }
 
   String get _uuid {
-    return "$_randomString${DateTime.now().millisecondsSinceEpoch}";
+    return _uuidGenerator.v4();
   }
 
   String get _randomString {
@@ -73,26 +84,24 @@ class LiveTalkApi {
   }) async {
     try {
       var headers = {'Content-Type': 'application/json'};
-      var request = http.Request(
-        'POST',
+      
+      final response = await http.post(
         Uri.parse('$_baseUrl/new_room'),
+        headers: headers,
+        body: json.encode(body),
       );
-      request.body = json.encode(body);
-      request.headers.addAll(headers);
-
-      // // Log thông tin request
-      // print('Request URL: ${request.url}');
-      // print('Request Headers: ${request.headers}');
-      // print('Request Body: ${request.body}');
-
-      http.StreamedResponse response = await request.send();
+      
       if ((response.statusCode ~/ 100) > 2) {
+        print('❌ ERROR: ${response.reasonPhrase}');
         throw LiveTalkError(message: {"message": response.reasonPhrase});
       }
+      
       if (response.statusCode == 200) {
-        final data = await response.stream.bytesToString();
+        final data = response.body;
+        
         final jsonData = json.decode(data);
         if (jsonData["status_code"] == -9999) {
+          print('❌ API Error: ${jsonData["message"]}');
           throw LiveTalkError(message: jsonData);
         }
         final payload = jsonData["payload"];
@@ -100,10 +109,12 @@ class LiveTalkApi {
         _sdkInfo!["room_id"] = payload["conversation"]["_id"];
         _sdkInfo!["access_token"] = payload["login_token"]["access_token"];
         _sdkInfo!["refresh_token"] = payload["login_token"]["refresh_token"];
+        
         return payload["conversation"]["_id"];
       }
       return null;
     } catch (error) {
+      print('❌ Exception during createRoom: $error');
       rethrow;
     }
   }
@@ -297,52 +308,80 @@ class LiveTalkApi {
     if (totalSize > 50) {
       throw LiveTalkError(message: {"message": "limit_50mb"});
     }
-    var headers = {
-      'Authorization': "Bearer ${_sdkInfo!["access_token"] as String}",
-    };
-    List<FileItem> fileItems = [];
-    for (var path in paths) {
-      // File file = File(path);
-      fileItems.add(FileItem(path: path, field: "files"));
-    }
-
-    final taskId = await FlutterUploader().enqueue(
-      MultipartFormDataUpload(
-        url: '$_baseUrl/message/guest_send_media',
-        // required: url to upload to
-        files: fileItems,
-        // r
-        method: UploadMethod.POST,
-        // HTTP method  (POST or PUT or PATCH)
-        headers: headers,
-        tag: 'upload',
-        data: {
-          "uuid": _uuid,
-          "room_id": _sdkInfo!["room_id"] ?? "",
+    
+    try {
+      // Tạo FormData
+      FormData formData = FormData();
+      formData.fields.add(MapEntry('uuid', _uuid));
+      formData.fields.add(MapEntry('room_id', _sdkInfo!["room_id"] ?? ""));
+      
+      // Thêm các file
+      for (var path in paths) {
+        File file = File(path);
+        String fileName = file.path.split('/').last;
+        formData.files.add(MapEntry(
+          'files',
+          await MultipartFile.fromFile(path, filename: fileName),
+        ));
+      }
+      
+      // Cấu hình yêu cầu
+      Options options = Options(
+        headers: {
+          'Authorization': "Bearer ${_sdkInfo!["access_token"] as String}",
         },
-      ),
-    );
-    return {
-      "task_id": taskId,
-    };
-    // http.StreamedResponse response = await request.send().timeout(
-    //   const Duration(seconds: 600),
-    //   onTimeout: () {
-    //     throw throw LiveTalkError(message: "timeout");
-    //   },
-    // );
-    // if ((response.statusCode ~/ 100) > 2) {
-    //   throw LiveTalkError(message: {"message": response.reasonPhrase});
-    // }
-    // if (response.statusCode == 200) {
-    //   final data = await response.stream.bytesToString();
-    //   final jsonData = json.decode(data);
-    //   if (jsonData["status_code"] == -9999) {
-    //     throw LiveTalkError(message: jsonData);
-    //   }
-    //   return jsonData["payload"];
-    // }
-    // return null;
+      );
+      
+      // Gửi yêu cầu với callback theo dõi tiến trình
+      final taskId = _uuid;
+      _dio.post(
+        '$_baseUrl/message/guest_send_media',
+        data: formData,
+        options: options,
+        onSendProgress: (sent, total) {
+          final progress = (sent / total);
+          _uploadProgressController.add({
+            "task_id": taskId,
+            "status": progress >= 1.0 ? 3 : 2, // 2: đang tải, 3: hoàn thành
+            "progress": progress,
+          });
+        },
+      ).then((response) {
+        if (response.statusCode == 200) {
+          final jsonData = response.data;
+          if (jsonData["status_code"] == -9999) {
+            _uploadProgressController.add({
+              "task_id": taskId,
+              "status": 4, // Lỗi
+              "message": jsonData["message"] ?? "Unknown error",
+            });
+          } else {
+            _uploadProgressController.add({
+              "task_id": taskId,
+              "status": 3, // Hoàn thành
+            });
+          }
+        } else {
+          _uploadProgressController.add({
+            "task_id": taskId,
+            "status": 4, // Lỗi
+            "message": "Server error: ${response.statusCode}",
+          });
+        }
+      }).catchError((error) {
+        _uploadProgressController.add({
+          "task_id": taskId,
+          "status": 4, // Lỗi
+          "message": "Upload error: ${error.toString()}",
+        });
+      });
+      
+      return {
+        "task_id": taskId,
+      };
+    } catch (e) {
+      throw LiveTalkError(message: {"message": "upload_error: ${e.toString()}"});
+    }
   }
 
   Future<List<LiveTalkMessageEntity>> getMessageHistory({
@@ -414,30 +453,38 @@ class LiveTalkApi {
   }
 
   Future<LiveTalkGeoEntity?> getGeo() async {
-    var headers = {
-      'Content-Type': 'application/json',
-    };
-    var request = http.Request(
-      'GET',
-      Uri.parse('$_baseUrl/geo'),
-    );
-    request.body = json.encode({});
-    request.headers.addAll(headers);
-    http.StreamedResponse response = await request.send();
-    if ((response.statusCode ~/ 100) > 2) {
-      throw LiveTalkError(message: {"message": response.reasonPhrase});
-    }
-    if (response.statusCode == 200) {
-      final data = await response.stream.bytesToString();
-      final jsonData = json.decode(data);
-      if (jsonData["status_code"] == -9999) {
-        throw LiveTalkError(message: jsonData);
+    try {
+      var headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      final response = await http.get(
+        Uri.parse('$_baseUrl/geo'),
+        headers: headers,
+      );
+      
+      if ((response.statusCode ~/ 100) > 2) {
+        print('❌ Geo Error: ${response.reasonPhrase}');
+        throw LiveTalkError(message: {"message": response.reasonPhrase});
       }
-      final payload = json.decode(jsonData["payload"]);
-      final result = LiveTalkGeoEntity.fromJson(payload);
-      return result;
+      
+      if (response.statusCode == 200) {
+        final data = response.body;
+        
+        final jsonData = json.decode(data);
+        if (jsonData["status_code"] == -9999) {
+          print('❌ Geo API Error: ${jsonData["message"]}');
+          throw LiveTalkError(message: jsonData);
+        }
+        final payload = json.decode(jsonData["payload"]);
+        final result = LiveTalkGeoEntity.fromJson(payload);
+        return result;
+      }
+      return null;
+    } catch (error) {
+      print('❌ Exception during getGeo: $error');
+      rethrow;
     }
-    return null;
   }
 
   Future<bool> logout({
@@ -445,26 +492,30 @@ class LiveTalkApi {
     required String deviceId,
     required String uuid,
   }) async {
+    if (_sdkInfo == null) {
+      throw LiveTalkError(message: {"message": "empty_info"});
+    }
     var headers = {
       'Content-Type': 'application/json',
       'Authorization': "Bearer ${_sdkInfo!["access_token"] as String}",
     };
-    var request = http.Request(
-      'POST',
+    
+    final response = await http.post(
       Uri.parse('$_baseUrl/guest/device_info/remove'),
+      headers: headers,
+      body: json.encode({
+        "app_id": appId,
+        "device_id": deviceId,
+        "uuid": uuid,
+      }),
     );
-    request.body = json.encode({
-      "app_id": appId,
-      "device_id": deviceId,
-      "uuid": uuid,
-    });
-    request.headers.addAll(headers);
-    http.StreamedResponse response = await request.send();
+    
     if ((response.statusCode ~/ 100) > 2) {
       throw LiveTalkError(message: {"message": response.reasonPhrase});
     }
+    
     if (response.statusCode == 200) {
-      final data = await response.stream.bytesToString();
+      final data = response.body;
       final jsonData = json.decode(data);
       if (jsonData["status_code"] == -9999) {
         throw LiveTalkError(message: jsonData);

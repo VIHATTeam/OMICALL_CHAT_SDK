@@ -1,4 +1,4 @@
-import 'package:audioplayers/audioplayers.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:flutter/material.dart';
 
 class AudioPreview extends StatefulWidget {
@@ -20,7 +20,16 @@ class _AudioPreviewState extends State<AudioPreview> {
   @override
   void initState() {
     super.initState();
-    player.play(UrlSource(widget.audio));
+    _initAudio();
+  }
+
+  Future<void> _initAudio() async {
+    try {
+      await player.setUrl(widget.audio);
+      await player.play();
+    } catch (e) {
+      debugPrint('Error playing audio: $e');
+    }
   }
 
   @override

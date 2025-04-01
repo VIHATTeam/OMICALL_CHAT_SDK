@@ -5,36 +5,12 @@ import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_uploader/flutter_uploader.dart';
 import 'package:livetalk_sdk/livetalk_api.dart';
 import 'package:livetalk_sdk/livetalk_socket_manager.dart';
 import 'package:livetalk_sdk/livetalk_string_utils.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import 'entity/entity.dart';
-
-void backgroundHandler() {
-  WidgetsFlutterBinding.ensureInitialized();
-  FlutterUploader uploader = FlutterUploader();
-  uploader.result.listen((result) {
-    _processMessage(result);
-  });
-}
-
-void _processMessage(UploadTaskResponse result) {
-  final taskId = result.taskId;
-  final status = result.status;
-  final data = result.response;
-  Map<String, dynamic>? message;
-  if (data != null && status == UploadTaskStatus.complete) {
-    message = jsonDecode(data);
-  }
-  _sendMessageController.add({
-    "status": status?.value ?? 0,
-    "taskId": taskId,
-    "message": message,
-  });
-}
 
 final StreamController<Map<String, dynamic>> _sendMessageController =
     StreamController.broadcast();
@@ -49,15 +25,11 @@ class LiveTalkSdk {
 
   // UploadFileCallback? uploadFileProcess;
   Stream<Map<String, dynamic>> get uploadFileStream =>
-      _sendMessageController.stream;
+      LiveTalkApi.instance.uploadStream;
 
   LiveTalkSdk({required this.domainPbx}) {
     LiveTalkApi.instance.getConfig(domainPbx);
     _instance = this;
-    FlutterUploader().setBackgroundHandler(backgroundHandler);
-    FlutterUploader().result.listen((result) {
-      _processMessage(result);
-    });
   }
 
   Stream<LiveTalkEventEntity> get eventStream =>
@@ -77,16 +49,23 @@ class LiveTalkSdk {
       if (sdkInfo == null) {
         sdkInfo = await LiveTalkApi.instance.getConfig(domainPbx);
         if (sdkInfo == null) {
+          print('❌ SDK Info is empty');
           throw LiveTalkError(message: {"message": "empty_info"});
         }
+      } else {
       }
+      
       if (phone.isValidMobilePhone == false) {
+        print('❌ Invalid phone number: $phone');
         throw LiveTalkError(message: {"message": "invalid_phone"});
       }
+      
       final geo = await LiveTalkApi.instance.getGeo();
       if (geo == null) {
+        print('❌ Failed to get geolocation data');
         throw LiveTalkError(message: {"message": "invalid_ip"});
       }
+      
       DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
       final deviceInfo = await deviceInfoPlugin.deviceInfo;
       String id = "";
@@ -96,6 +75,7 @@ class LiveTalkSdk {
       if (deviceInfo is AndroidDeviceInfo) {
         id = deviceInfo.id;
       }
+      
       PackageInfo packageInfo = await PackageInfo.fromPlatform();
       String packageName = packageInfo.packageName;
 
@@ -137,17 +117,22 @@ class LiveTalkSdk {
           "lon": geo.geopluginLongitude,
         }
       };
+      
       final result = await LiveTalkApi.instance.createRoom(body: body);
-      //trigger websocket
+      
       if (result != null) {
         LiveTalkSocketManager.shareInstance.startListenWebSocket(
           LiveTalkApi.instance.sdkInfo!["access_token"] as String,
           result,
           sdkInfo["tenant_id"] as String,
         );
+      } else {
+        print('⚠️ Room created but result is null');
       }
+      
       return result;
     } catch (error) {
+      print('❌ Error in LiveTalkSdk.createRoom: $error');
       rethrow;
     }
   }
@@ -225,5 +210,34 @@ class LiveTalkSdk {
 
   void disconnect() {
     LiveTalkSocketManager.shareInstance.disconnect();
+  }
+
+  Future<void> forceReconnectSocket() async {
+    try {
+      print("💡 Force reconnecting socket...");
+      LiveTalkRoomEntity? currentRoom = await getCurrentRoom();
+      if (currentRoom != null && currentRoom.id != null) {
+        print("💡 Using room ID: ${currentRoom.id}");
+        LiveTalkSocketManager.shareInstance.disconnect();
+        await Future.delayed(Duration(milliseconds: 500));
+        
+        final sdkInfo = LiveTalkApi.instance.sdkInfo;
+        if (sdkInfo != null && sdkInfo["access_token"] != null && sdkInfo["tenant_id"] != null) {
+          print("💡 Reconnecting socket with token and tenant ID");
+          LiveTalkSocketManager.shareInstance.startListenWebSocket(
+            sdkInfo["access_token"] as String,
+            currentRoom.id!,
+            sdkInfo["tenant_id"] as String,
+          );
+          return;
+        }
+        print("💡 Can't reconnect: missing SDK info");
+      } else {
+        print("💡 No active room found");
+      }
+    } catch (e) {
+      print("💡 Error during force reconnect: $e");
+      rethrow;
+    }
   }
 }

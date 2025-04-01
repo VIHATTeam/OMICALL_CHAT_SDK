@@ -1,28 +1,28 @@
 import 'dart:io';
 
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
+//import 'package:firebase_core/firebase_core.dart';
+//import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:livetalk_sdk/livetalk_sdk.dart';
 import 'package:livetalk_sdk_example/create_user_form_screen.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import 'notification_service.dart';
 
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
-  print("Handling a background message: ${message.messageId}");
-}
+// Commented out Firebase messaging handler
+//Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+//  await Firebase.initializeApp();
+//  print("Handling a background message: ${message.messageId}");
+//}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   HttpOverrides.global = MyHttpOverrides();
   LiveTalkSdk(domainPbx: "quidn");
-  await Firebase.initializeApp();
-  NotificationService().init();
+  //await Firebase.initializeApp();
+  await NotificationService().init();
 
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  //FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   runApp(const MyApp());
 }
@@ -40,18 +40,18 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     EasyLoading.instance.userInteractions = false;
 
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      NotificationService().showNotification(message);
-    });
+    // Commented out Firebase implementation
+    //FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    //  NotificationService().showNotification(message);
+    //});
 
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      print('Message clicked!');
-    });
+    //FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+    //  print('Message clicked!');
+    //});
   }
 
   @override
   Widget build(BuildContext context) {
-
     return GestureDetector(
       child: MaterialApp(
         theme: ThemeData.light(),
