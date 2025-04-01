@@ -5,7 +5,7 @@ Currently active maintenance and improve performance
 
 
 ### Running
-Install via pubspec.yaml:
+Install via pubspec.yaml [livetalk_sdk](https://pub.dev/packages/livetalk_sdk):
 
 ```
 livetalk_sdk: ^latest_version
