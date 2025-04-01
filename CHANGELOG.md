@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## 0.0.12
+## 0.0.12, 0.0.14, 0.0.15
 - Standardized documentation to match API implementation
 - Fixed inconsistencies in parameter naming (task_id vs taskId)
 - Clarified file upload status codes (2=in progress, 3=completed, 4=error)
