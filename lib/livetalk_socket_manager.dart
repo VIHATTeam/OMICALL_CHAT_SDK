@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:livetalk_sdk/entity/entity.dart';
+import 'package:livetalk_sdk/livetalk_endpoints.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'package:socket_io_client/socket_io_client.dart';
 
@@ -29,7 +30,7 @@ class LiveTalkSocketManager {
   ) async {
 
     _socket = io.io(
-      'https://socket-event-v1-stg.omicrm.com/$tenantId',
+      '${LiveTalkEndpoints.socketUrl}/$tenantId',
       OptionBuilder().setTransports(['websocket']).setQuery({
         "env": "widget",
         "type": "guest",

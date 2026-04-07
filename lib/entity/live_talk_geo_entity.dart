@@ -67,8 +67,8 @@ class LiveTalkGeoEntity {
     geopluginEuVATrate = json['geoplugin_euVATrate'];
     geopluginContinentCode = json['geoplugin_continentCode'];
     geopluginContinentName = json['geoplugin_continentName'];
-    geopluginLatitude = json['geoplugin_latitude'];
-    geopluginLongitude = json['geoplugin_longitude'];
+    geopluginLatitude = json['geoplugin_latitude']?.toString();
+    geopluginLongitude = json['geoplugin_longitude']?.toString();
     geopluginLocationAccuracyRadius = json['geoplugin_locationAccuracyRadius'];
     geopluginTimezone = json['geoplugin_timezone'];
     geopluginCurrencyCode = json['geoplugin_currencyCode'];

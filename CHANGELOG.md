@@ -2,6 +2,40 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.0.1 — 2026-04-07
+
+### Breaking Changes
+- `createRoom()` signature simplified: removed `autoExpired`, `fcm`, `projectId`, `domain` (URL) parameters. V2 API no longer requires geo-location or device info. New signature: `createRoom({ phone, fullName, uuid, domain = 'default' })`.
+- `LiveTalkError` constructor changed: now requires `statusCode` (int) and `errorKey` (String). Old `message`-only constructor no longer valid. Update catch blocks to use `error.errorKey` for i18n lookups.
+
+### New Features
+- **Centralized endpoint management** — `LiveTalkEndpoints` class (`lib/livetalk_endpoints.dart`) holds all API base URLs and paths. Change environment or update a path in one place.
+- **Structured error handling** — `LiveTalkErrorCodes` class (`lib/livetalk_error_codes.dart`) defines string constants for all HTTP status codes (204, 301, 304, 400–429, 440, 500–511) plus API body errors and client-side validation errors. Designed for i18n: pass `error.errorKey` to your translation layer.
+- **`LiveTalkError` now carries `statusCode` and `errorKey`** — consumers can `switch` on `statusCode` or match `errorKey` against `LiveTalkErrorCodes.*` constants.
+- Upload progress stream events now include `error_key` field (one of `LiveTalkErrorCodes.*`) when `status == 4`.
+
+### API Paths Updated to V2
+All endpoints migrated to V2:
+- `POST /widget/new_room_v2`
+- `POST /widget/message/guest_send_message_v2`
+- `POST /widget/message/sticker/guest_send_v2`
+- `POST /widget/message/guest_send_media_v2`
+- `POST /widget/message/search_for_guest_v2`
+- `POST /widget/guest/message/remove_v2`
+- `POST /widget/guest/device_info/remove_v2`
+- `POST /widget/new_room_v2` success indicator changed: `status_code: 9999` (was `0`)
+
+### Android
+- `compileSdk` and `targetSdk` upgraded to **36** (required by `flutter_plugin_android_lifecycle`, `image_picker_android`, `path_provider_android`, `video_player_android`).
+- `minSdk` set to **23** (Flutter 3.35+ minimum).
+- Fixed Kotlin DSL (`build.gradle.kts`) syntax: `minSdkVersion flutter.minSdkVersion` → `minSdk = 23`.
+
+### Dependencies
+- `device_info_plus` upgraded to `^11.0.0` (fixes `win32` 4.x → 5.x transitive dependency, required for Dart 3.9+).
+- `package_info_plus` upgraded to `^8.0.0`.
+- Dart SDK constraint updated to `>=3.5.0 <4.0.0`.
+- Flutter constraint updated to `>=3.24.0`.
+
 ## 0.0.12, 0.0.14, 0.0.15
 - Standardized documentation to match API implementation
 - Fixed inconsistencies in parameter naming (task_id vs taskId)

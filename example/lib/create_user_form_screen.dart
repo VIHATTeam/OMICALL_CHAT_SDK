@@ -1,4 +1,3 @@
-// import 'package:firebase_messaging/firebase_messaging.dart';
 import 'dart:io';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -21,12 +20,12 @@ class CreateUserFormScreen extends StatefulWidget {
   }
 }
 
-String uuid = "0967884005";
+String uuid = "";
 
 class _CreateUserFormState extends State<CreateUserFormScreen> {
   //video
   late final TextEditingController _userNameController = TextEditingController()
-    ..text = "N 0967884005";
+    ..text = "Test Chat LiveTalk ConCung";
   late final TextEditingController _phoneController = TextEditingController()
     ..text = uuid;
   late final TextEditingController _emailController = TextEditingController()
@@ -54,33 +53,47 @@ class _CreateUserFormState extends State<CreateUserFormScreen> {
     // requestFCM();
   }
 
-  // Lấy FCM token thật từ thiết bị thay vì giá trị giả
+  /// Get FCM device token with fallback support
+  /// Returns real FCM token if available, otherwise returns mock token
   Future<String?> getDeviceToken() async {
     try {
       print('===== FCM DEBUG: getDeviceToken() called from CreateUserFormScreen =====');
-      
-      // Kiểm tra xem Firebase Messaging có sẵn không
+
+      // Only attempt Firebase on mobile platforms
       if (Platform.isAndroid || Platform.isIOS) {
-        // Kích hoạt quyền thông báo nếu cần
-        await FirebaseMessaging.instance.requestPermission(
-          alert: true,
-          badge: true,
-          sound: true,
-          provisional: false,
-        );
-        
-        // Lấy token thật
-        final token = await FirebaseMessaging.instance.getToken();
-        print('===== FCM DEBUG: Received REAL FCM token: $token =====');
-        return token;
+        try {
+          // Request notification permissions
+          final settings = await FirebaseMessaging.instance.requestPermission(
+            alert: true,
+            badge: true,
+            sound: true,
+            provisional: false,
+          );
+
+          print('===== FCM DEBUG: Permission status: ${settings.authorizationStatus} =====');
+
+          // Get FCM token
+          final token = await FirebaseMessaging.instance.getToken();
+
+          if (token != null && token.isNotEmpty) {
+            print('===== FCM DEBUG: Received REAL FCM token: $token =====');
+            return token;
+          } else {
+            print('===== FCM DEBUG: FCM token is null or empty, using mock token =====');
+            return "mock-token-${DateTime.now().millisecondsSinceEpoch}";
+          }
+        } catch (firebaseError) {
+          print('===== FCM DEBUG: Firebase error: $firebaseError =====');
+          print('===== FCM DEBUG: Falling back to mock token =====');
+          return "mock-token-fb-error-${DateTime.now().millisecondsSinceEpoch}";
+        }
       } else {
         print('===== FCM DEBUG: Platform not supported for FCM, using mock token =====');
-        return "mock-token-${DateTime.now().millisecondsSinceEpoch}";
+        return "mock-token-unsupported-${DateTime.now().millisecondsSinceEpoch}";
       }
     } catch (e) {
-      print('===== FCM DEBUG: Error getting FCM token: $e =====');
-      print('===== FCM DEBUG: Falling back to mock token =====');
-      return "mock-token-on-error-${DateTime.now().millisecondsSinceEpoch}";
+      print('===== FCM DEBUG: General error getting device token: $e =====');
+      return "mock-token-error-${DateTime.now().millisecondsSinceEpoch}";
     }
   }
 
@@ -204,26 +217,19 @@ class _CreateUserFormState extends State<CreateUserFormScreen> {
                   EasyLoading.show();
                   print('EasyLoading.show() called');
                   
-                  // final fcm = await FirebaseMessaging.instance.getToken();
-                  print('Requesting FCM token');
-                  final fcm = await getDeviceToken();
-                  print('FCM token received: $fcm');
-                  
                   print('Creating room with:');
                   print('- Phone: ${_phoneController.text}');
                   print('- Name: ${_userNameController.text}');
                   print('- UUID: ${_phoneController.text}');
-                  print('- AutoExpired: $_isAutoExpired');
-                  print('- FCM: $fcm');
-                  print('- ProjectId: omicrm-6558a');
-                  
+
+                  final fcmToken = await getDeviceToken();
+
                   final result = await LiveTalkSdk.shareInstance.createRoom(
-                    phone: _phoneController.text,
-                    fullName: _userNameController.text,
-                    uuid: _phoneController.text,
+                    phone:       _phoneController.text,
+                    fullName:    _userNameController.text,
+                    uuid:        _phoneController.text,
                     autoExpired: _isAutoExpired,
-                    fcm: fcm,
-                    projectId: "omicrm-6558a"
+                    fcm:         fcmToken,
                   );
                   
                   print('Room creation result: $result');
@@ -251,10 +257,10 @@ class _CreateUserFormState extends State<CreateUserFormScreen> {
                   print('EasyLoading.dismiss() called after error');
                   
                   if (error is LiveTalkError) {
-                    print('LiveTalkError: ${error.message["message"]}');
+                    print('LiveTalkError: ${error.errorKey}');
                     showCustomDialog(
                       context: context,
-                      message: error.message["message"] as String,
+                      message: error.errorKey,
                     );
                     print('Dialog shown');
                   } else {

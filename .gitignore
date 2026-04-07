@@ -118,3 +118,5 @@ temp_project/
 # Generated files
 .dart_tool/package_config.json
 .dart_tool/package_config_subset
+
+CLAUDE.MD

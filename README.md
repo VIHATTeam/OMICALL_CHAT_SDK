@@ -1,453 +1,438 @@
-# LIVETALK SDK FOR Flutter
+# OMICALL Chat SDK for Flutter
 
-### Status
-Currently active maintenance and improve performance
+Flutter SDK for integrating [Omicall LiveTalk](https://omicall.com) chat into mobile applications.
 
+[![pub.dev](https://img.shields.io/pub/v/livetalk_sdk.svg)](https://pub.dev/packages/livetalk_sdk)
 
-### Running
-Install via pubspec.yaml [livetalk_sdk](https://pub.dev/packages/livetalk_sdk):
+---
 
-```
-livetalk_sdk: ^latest_version
-```
+## Requirements
 
-### Configuration
+| Platform | Minimum version |
+|----------|----------------|
+| Flutter  | 3.16.0         |
+| Dart     | 3.2.0          |
+| Android  | SDK 23 (Android 6.0) |
+| iOS      | 12.0           |
 
-- Add this line into main function:
+---
 
-```
-LiveTalkSdk(domainPbx: "${your domain => provide by Omi, contact my sales to receive it}");
-- If you implemented omikit_flutter_plugin. Your domain is `realm` in omikit_flutter_plugin.
-```
+## Installation
 
-- We use <a href="https://pub.dev/packages/firebase_messaging">firebase_messaging</a> to show notification. You need setup it.
-
-## Implement
-- Create the room for chat:
-```
-try {
-  EasyLoading.show();
-  final result = await LiveTalkSdk.shareInstance.createRoom(
-    phone: _phoneController.text,
-    fullName: _userNameController.text,
-    uuid: _phoneController.text,
-    autoExpired: _isAutoExpired,
-    fcm: // token fcm,
-    projectId: // project id off firebase
-  );
-  EasyLoading.dismiss();
-  if (result != null && mounted) {
-    //navigate to chat screen.
-  }
-} catch (error) {
-  EasyLoading.dismiss();
-  if (error is LiveTalkError) {
-    //have some error
-    //error.message["message"] to receive error message.
-  }
-}
-
-- fullname: user name.
-- phone: user phone.
-- autoExpired: default is false. If autoExpired is true, the room is alive only 1 day.
-- uuid: unique id.
-- domain: your domain, it will show on web admin
-- fcm: FCM token
-- projectId: your project id in firebase 
-=> We need provide phone/uuid unique for each user.
-=> If you change another uuid for user, we will create a new room.
-=> If user don't have a room on my server, we will create a new room, if user room is exists, we will return current user room.
-```
-- Get current room information:
-```
-await LiveTalkSdk.shareInstance.getCurrentRoom();
-
-Important fields: 
-+ id: it is room id.
-+ guestInfo: guest information (sdk user is guest user)
-+ lastMessage: last message in current room.
-+ members: room members, you can get name and status of users in this.
-+ hasMember: true => admin joined on web admin, true => wait admin to join.
-```
-- Get chat history:
-```
-await LiveTalkSdk.shareInstance.getMessageHistory(
-  page: page, //1,2,3,4,5
-  size: size, //size of each page.
-);
-
-Important fields: 
-+ id: message id.
-+ uuid: user uuid.
-+ createBy: message owner.
-+ create date: 
-+ type: chat/activity.
-+ memberType: guest is user sdk/ user is admin user (on web admin)/ system is system user.
-+ guestInfo: guest information (sdk user is guest user).
-+ multimedias: medias file.
-+ template: activity data.
-+ quoteMessage: answer/quote of this message.
-+ reactions: reaction list on this message.
-```
-- Send message:
-```
-final sendingMessage = LiveTalkSendingMessage.createTxtSendMessage(
-  message: _controller.text, 
-  quoteId: _repMessage?.id, 
-);
-try {
-    await LiveTalkSdk.shareInstance.sendMessage(
-        sendingMessage
-    );
-    _controller.clear();
-} catch (error) {
-    if (error is LiveTalkError) {
-    
-    }
-}
-
-Parameters:
-- message: message content (only text).
-- quoteId: if you want to answer/quote another message, you need send id of quote message.
-=> If result is OK, you will receive event from socket.
-```
-
-- Send files:
-```
-final sendingMessage = LiveTalkSendingMessage.createTxtSendFiles(
-  paths: result.paths.cast<String>(),
-);
-try {
-   final result = await LiveTalkSdk.shareInstance.sendMessage(
-      sendingMessage
-   );
-   // Result will contain task_id for tracking upload progress
-   print("File upload started with task_id: ${result?["task_id"]}");
-} catch (error) {
-    if (error is LiveTalkError) {
-      // Handle error
-    }
-}
-
-Parameters:
-- paths: path of files
-Notes:
-- We limited 50 mb for each file sending.
-- You can send image/video,word,pdf...... file type. We can support all.
-- If result is OK, you will receive event from socket.
-- When sending files, API will return result with `task_id` key (not taskId). You can use it to identify upload tasks when handling events from uploadFileStream.
-```
-
-- Listen file sending response:
-```dart
-final subscription = LiveTalkSdk.shareInstance.uploadFileStream.listen((event) {
-  // Example of event data:
-  // {
-  //   "task_id": "abc123xyz", // Task ID to identify the upload
-  //   "status": 2, // Status codes: 2: in progress, 3: completed, 4: error
-  //   "progress": 0.65, // Upload progress as a fraction (0.0 to 1.0)
-  //   "message": "error message" // Only present when status is 4 (error)
-  // }
-  
-  int status = event["status"];
-  String? task_id = event["task_id"];
-  
-  if (status == 2) { // In progress
-    // Update progress UI
-    final progress = event["progress"] as double;
-    print("Upload progress for $task_id: ${(progress * 100).toStringAsFixed(0)}%");
-  } else if (status == 3) { // Completed
-    // Handle completed upload
-    print("Upload $task_id completed successfully");
-  } else if (status == 4) { // Error
-    // Handle error
-    final errorMessage = event["message"];
-    print("Upload $task_id failed: $errorMessage");
-  }
-});
-
-Notes: 
-- Status codes: 2 = in progress, 3 = completed, 4 = error
-- Progress is reported as a fraction between 0.0 and 1.0
-- task_id is used to identify which upload the event belongs to
-```
-
-- Remove message:
-```
-await LiveTalkSdk.shareInstance.removeMessage(id: id);
-
-Parameters:
-- id: message id.
-- If result is OK, you will receive event from socket.
-```
-
-- React/Unreact message:
-```
-await LiveTalkSdk.shareInstance.actionOnMessage(
-  content: content,
-  id: id ?? "",
-  action: "REACT",
-);
-
-Parameters:
-- id: message id.
-- content: reaction content.
-- action: "REACT" is react on message, "UNREACT" is unreact on message.
-```
-
-- Websocket events:
-```
-LiveTalkSdk.shareInstance.eventStream.listen((result) {
-   final event = result.eventName;
-   final data = result.data;
-});
-
-With:
-- event: event name.
-- data: event data.
-```
-
-- Events:
-  -  `message`: have a new message. You will receive message data in data field. Message data is same type with `getMessageHistory` api.
-  - `someone_typing`: admin is typing/untyping message. We send `isTyping` into data field. You use to show typing/untyping.
-  - `member_join`: admin joined guest chat => you need refresh room information.
-  - `member_disconnect`: admin offlined.
-  - `member_connect`: admin online.
-  - `lt_reaction`: have reaction on message. We will send `msg_id` and `reactions` in data field, you use to find and update on your message list.
-  - `remove_message`: a message removed. We will send `message_id` in data fields, you use to find and remove it on your message list.
-```
-
-# OMICALL Chat SDK
-
-This SDK helps your application integrate easily with Omicall's LiveTalk chat platform.
-
-## Library Versions
-
-The SDK uses these main libraries with the following versions:
-- socket_io_client: ^2.0.3+1
-- http: ^1.2.1
-- uuid: ^4.3.3
-- dio: ^5.4.2
-- device_info_plus: ^9.1.2
-- package_info_plus: ^5.0.1
-- Firebase Messaging: ^14.7.10 (for push notifications)
-- Firebase Core: ^2.24.2
-
-## Configuration
-
-### Required configuration files not included in git
-
-This project uses `.gitignore` to exclude specific configuration files that should not be included in version control. Before you can run the project, you need to ensure the following configuration files:
-
-#### Android
-- `example/android/app/google-services.json` - Firebase configuration file for Android
-- `example/android/local.properties` - SDK path configuration for Android
-
-#### iOS
-- `example/ios/Runner/GoogleService-Info.plist` - Firebase configuration file for iOS
-- `example/ios/firebase_app_id_file.json` - Firebase application ID (optional)
-
-### Requirements
-
-- Flutter 3.10.0 or later
-- Dart 3.0.0 or later (Fully compatible with Dart 3)
-- Android SDK 34 or later (targetSdkVersion & compileSdkVersion)
-- iOS 12.0 or later
-
-### Installation Instructions
-
-1. Add the SDK to your `pubspec.yaml` file:
+Add to `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  livetalk_sdk:
-    git:
-      url: https://github.com/VIHATTeam/OMICALL_CHAT_SDK.git
-      ref: main  # or use a specific tag/branch
+  livetalk_sdk: ^1.0.1
 ```
 
-2. Install dependencies:
+Then run:
 
 ```bash
 flutter pub get
 ```
 
-3. Configure Firebase (if you want to use push notifications):
+---
 
-- Register your application on [Firebase Console](https://console.firebase.google.com/)
-- Add your Android and iOS application to the Firebase project
-- Download and add configuration files to the project:
-  - `google-services.json` for Android
-  - `GoogleService-Info.plist` for iOS
+## Android Setup
 
-4. Android Configuration:
-   
-Add to `android/app/build.gradle`:
+In `android/app/build.gradle.kts`:
 
-```gradle
+```kotlin
 android {
+    compileSdk = 36
+
     defaultConfig {
-        // ...
-        minSdkVersion 21
-        // ...
+        minSdk = 23
+        targetSdk = 36
     }
 }
 ```
 
-5. iOS Configuration:
+In `android/gradle.properties`:
 
-Update `ios/Podfile`:
+```properties
+android.suppressUnsupportedCompileSdk=36
+```
+
+---
+
+## iOS Setup
+
+In `ios/Podfile`:
 
 ```ruby
 platform :ios, '12.0'
 ```
 
-## Usage
+---
 
-### Initialize SDK
+## Firebase Push Notifications (Optional)
+
+The SDK does not require Firebase, but push notifications need it.
+
+1. Register your app at [Firebase Console](https://console.firebase.google.com/).
+2. Add `google-services.json` to `android/app/`.
+3. Add `GoogleService-Info.plist` to `ios/Runner/`.
+4. Add dependencies to `pubspec.yaml`:
+
+```yaml
+dependencies:
+  firebase_core: ^3.8.1
+  firebase_messaging: ^15.1.3
+```
+
+5. Initialize in `main.dart`:
+
+```dart
+await Firebase.initializeApp();
+FirebaseMessaging.onBackgroundMessage(_backgroundHandler);
+```
+
+---
+
+## Quick Start
+
+### 1. Initialize SDK
+
+Call once in `main()` before `runApp()`:
 
 ```dart
 import 'package:livetalk_sdk/livetalk_sdk.dart';
 
-// Initialize SDK with your domain
-LiveTalkSdk(domainPbx: "your_domain");
-```
-
-### Create a New Chat Room
-
-```dart
-try {
-  final result = await LiveTalkSdk.shareInstance.createRoom(
-    phone: "0123456789",  // User's phone number
-    fullName: "John Doe",  // User's name
-    uuid: "unique-identifier",  // Unique identifier for the user
-    fcm: fcmToken,  // FCM token for push notifications (optional)
-  );
-  
-  if (result != null) {
-    print("Room created successfully with ID: $result");
-  }
-} catch (e) {
-  print("Error creating room: $e");
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  LiveTalkSdk(domainPbx: 'your_domain'); // domain provided by Omicall
+  runApp(const MyApp());
 }
 ```
 
-### Send Message
+> `domainPbx` is the same as `realm` if you are using `omikit_flutter_plugin`.
+
+### 2. Create a Chat Room
 
 ```dart
-final message = LiveTalkSendingMessage(
-  roomId: roomId,  // Room ID from createRoom
-  content: "Hello!",  // Message content
-  type: "text",  // Message type: "text", "image", "file", ...
+try {
+  final roomId = await LiveTalkSdk.shareInstance.createRoom(
+    phone:    '0123456789',   // guest phone number
+    fullName: 'Nguyen Van A', // guest display name
+    uuid:     '0123456789',   // unique identifier — reuse to resume the same room
+    domain:   'default',      // optional, defaults to 'default'
+  );
+
+  if (roomId != null) {
+    // navigate to chat screen
+  }
+} on LiveTalkError catch (e) {
+  // e.errorKey: i18n key (e.g. 'error_invalid_phone')
+  // e.statusCode: HTTP status code or -1 for client errors
+  print('Error: ${e.errorKey}');
+}
+```
+
+> - Same `uuid` → resumes existing room.
+> - Different `uuid` → creates a new room.
+
+### 3. Send a Text Message
+
+```dart
+final msg = LiveTalkSendingMessage.createTxtSendMessage(
+  message: 'Hello!',
+  quoteId: replyMessageId, // optional — quote/reply another message
 );
 
 try {
-  final result = await LiveTalkSdk.shareInstance.sendMessage(message);
-  print("Message sent successfully: $result");
-} catch (e) {
-  print("Error sending message: $e");
+  await LiveTalkSdk.shareInstance.sendMessage(msg);
+} on LiveTalkError catch (e) {
+  print('Error: ${e.errorKey}');
 }
 ```
 
-### Receive Messages and Events
+### 4. Send a Sticker
 
 ```dart
-LiveTalkSdk.shareInstance.eventStream.listen((result) {
-  final event = result.eventName;
-  final data = result.data;
-  
-  switch (event) {
-    case "message":
-      print("New message received: $data");
-      break;
-    case "someone_typing":
-      print("User is typing: $data");
-      break;
-    // Handle other events...
+final msg = LiveTalkSendingMessage.createSendSticker(
+  sticker: 'https://example.com/sticker.png', // sticker URL
+);
+
+await LiveTalkSdk.shareInstance.sendMessage(msg);
+```
+
+### 5. Send Files / Media
+
+```dart
+final msg = LiveTalkSendingMessage.createTxtSendFiles(
+  paths: ['/path/to/file1.jpg', '/path/to/file2.pdf'],
+);
+
+final result = await LiveTalkSdk.shareInstance.sendMessage(msg);
+final taskId = result?['task_id']; // use to track upload progress
+```
+
+**Limits:** max 6 files, total ≤ 50 MB. Supports image, video, PDF, Word, and all common file types.
+
+### 6. Track Upload Progress
+
+```dart
+LiveTalkSdk.shareInstance.uploadFileStream.listen((event) {
+  final taskId   = event['task_id']  as String;
+  final status   = event['status']   as int;
+  final progress = event['progress'] as double?; // 0.0–1.0, only when status == 2
+
+  switch (status) {
+    case 2: // uploading
+      print('$taskId — ${((progress ?? 0) * 100).toStringAsFixed(0)}%');
+    case 3: // completed
+      print('$taskId — done');
+    case 4: // error
+      final errorKey = event['error_key'] as String?; // LiveTalkErrorCodes.*
+      print('$taskId — failed: $errorKey');
   }
 });
 ```
 
-### Receive Push Notifications (Firebase)
-
-Use `NotificationService` to receive and process push notifications:
+### 7. Listen for Real-Time Events
 
 ```dart
-// Initialize notification service
-await NotificationService().init();
-
-// Register background message handler
-FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
-// Handle messages when app is open
-FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-  NotificationService().showNotification(message);
-});
-
-// Handle when user taps on notification
-FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-  // Handle app opening from notification
+LiveTalkSdk.shareInstance.eventStream.listen((event) {
+  switch (event.eventName) {
+    case 'message':
+      // event.data contains the new message (same shape as getMessageHistory items)
+      break;
+    case 'someone_typing':
+      // event.data['isTyping'] — bool
+      break;
+    case 'member_join':
+      // agent joined — refresh room info with getCurrentRoom()
+      break;
+    case 'member_connect':
+      // agent came online
+      break;
+    case 'member_disconnect':
+      // agent went offline
+      break;
+    case 'lt_reaction':
+      // event.data['msg_id'], event.data['reactions']
+      break;
+    case 'remove_message':
+      // event.data['message_id']
+      break;
+    case 'socket_connected':
+    case 'socket_disconnect':
+    case 'socket_connect_error':
+      break;
+  }
 });
 ```
+
+### 8. Get Room Info
+
+```dart
+final room = await LiveTalkSdk.shareInstance.getCurrentRoom();
+
+// Key fields:
+// room.id           — room ID
+// room.status       — 'active' | ...
+// room.hasMember    — true: agent is present, false: waiting
+// room.members      — list of agents (name, avatar, status, sipUser)
+// room.lastMessage  — last message summary
+// room.guestInfo    — guest (SDK user) information
+```
+
+### 9. Get Message History
+
+```dart
+final messages = await LiveTalkSdk.shareInstance.getMessageHistory(
+  page: 0,   // zero-based page index
+  size: 15,  // items per page
+);
+
+// Each LiveTalkMessageEntity has:
+// .id           — message ID
+// .content      — text content
+// .type         — 'message' | 'activity' | 'sticker' | 'media'
+// .memberType   — 'guest' | 'agent' | 'system'
+// .multimedias  — list of attached files (name, url, contentType, size)
+// .reactions    — list of reactions
+// .quoteMessage — quoted/replied message
+// .createdDate  — Unix timestamp (ms)
+```
+
+### 10. React / Unreact to a Message
+
+```dart
+await LiveTalkSdk.shareInstance.actionOnMessage(
+  id:      messageId,
+  content: '👍',
+  action:  'REACT',   // or 'UNREACT'
+);
+```
+
+### 11. Remove a Message
+
+```dart
+await LiveTalkSdk.shareInstance.removeMessage(id: messageId);
+```
+
+### 12. Logout
+
+```dart
+await LiveTalkSdk.shareInstance.logout(uuid);
+```
+
+### 13. Disconnect Socket
+
+Manually close the WebSocket connection (e.g. when leaving the chat screen):
+
+```dart
+LiveTalkSdk.shareInstance.disconnect();
+```
+
+### 14. Force Reconnect Socket
+
+Re-establish the WebSocket connection after a network drop:
+
+```dart
+await LiveTalkSdk.shareInstance.forceReconnectSocket();
+```
+
+> Internally: disconnects, waits 500 ms, then reconnects using the current room and token. No-op if no active room.
+
+---
+
+## Architecture Overview
+
+```
+Your App
+   │
+   ▼
+LiveTalkSdk (singleton — LiveTalkSdk.shareInstance)
+   ├── LiveTalkApi (singleton)          — REST: HTTP + Dio (file uploads)
+   │     ├── POST /new_room_v2
+   │     ├── POST /message/guest_send_message_v2
+   │     ├── POST /message/sticker/guest_send_v2
+   │     ├── POST /message/guest_send_media_v2
+   │     ├── POST /message/search_for_guest_v2
+   │     ├── POST /guest/message/remove_v2
+   │     ├── POST /guest/message/sender_action
+   │     ├── GET  /guest/room
+   │     └── POST /guest/device_info/remove_v2
+   │
+   └── LiveTalkSocketManager (singleton) — WebSocket (socket_io_client v2)
+         └── wss://socket-event-v1-stg.omicrm.com/{tenantId}
+               Events: message, lt_reaction, member_join,
+                       member_connect, member_disconnect,
+                       someone_typing, socket_connected,
+                       socket_disconnect, socket_connect_error
+```
+
+**Startup flow:**
+```
+LiveTalkSdk(domainPbx)
+  └─▶ LiveTalkApi.getConfig(domainPbx)   ← fetches tenantId + access_token
+
+createRoom(phone, fullName, uuid)
+  └─▶ LiveTalkApi.createRoom()           ← POST /new_room_v2 → returns roomId
+        └─▶ LiveTalkSocketManager.startListenWebSocket(token, roomId, tenantId)
+```
+
+---
+
+## Error Handling
+
+All SDK methods throw `LiveTalkError` on failure.
+
+```dart
+try {
+  await LiveTalkSdk.shareInstance.createRoom(...);
+} on LiveTalkError catch (e) {
+  final key        = e.errorKey;    // String constant from LiveTalkErrorCodes
+  final httpCode   = e.statusCode;  // HTTP code, 0 (API body error), or -1 (client error)
+  final rawPayload = e.message;     // Map<String, dynamic>? — raw server response
+
+  // Use errorKey for i18n:
+  final localizedMsg = AppLocalizations.of(context)!.translate(key);
+}
+```
+
+### `LiveTalkErrorCodes` reference
+
+| Constant | HTTP code | Meaning |
+|----------|-----------|---------|
+| `noData` | 204 | No content |
+| `invalidData` | 400 | Bad request / invalid input |
+| `sessionExpired` | 401 | Token expired |
+| `forbidden` | 403 | No permission |
+| `notFound` | 404 | Resource not found |
+| `methodNotAllowed` | 405 | Method not allowed |
+| `tooManyRequests` | 429 | Rate limited |
+| `loginSessionExpired` | 440 | Login session expired |
+| `system` | 500 | Internal server error |
+| `badGateway` | 502 | Bad gateway |
+| `serviceUnavailable` | 503 | Service unavailable |
+| `requestTimeout` | 504 | Gateway timeout |
+| `noInternet` | 511 | No network |
+| `api` | 0 | API returned status_code -9999 |
+| `emptyInfo` | -1 | SDK not initialized |
+| `invalidPhone` | -1 | Invalid phone number format |
+| `spamRequest` | -1 | Message sent too fast (300 ms throttle) |
+| `emptyText` | -1 | Empty message content |
+| `fileLimitExceeded` | -1 | More than 6 files |
+| `fileSizeExceeded` | -1 | Total file size > 50 MB |
+| `unknown` | — | Unhandled error |
+
+---
+
+## Endpoint Configuration
+
+All API base URLs and paths are defined in `LiveTalkEndpoints`:
+
+```dart
+import 'package:livetalk_sdk/livetalk_endpoints.dart';
+
+// Read the current base URL:
+print(LiveTalkEndpoints.baseUrl);   // https://livetalk-v2-stg.omicrm.com/widget
+print(LiveTalkEndpoints.socketUrl); // https://socket-event-v1-stg.omicrm.com
+```
+
+To switch environments, update `lib/livetalk_endpoints.dart` — all methods pick up the change automatically.
+
+---
 
 ## Troubleshooting
 
-### Issues with compileSdkVersion
+**Build error: `minSdkVersion flutter.minSdkVersion` in `.kts` file**
 
-If you encounter errors related to `compileSdkVersion`, try adding the following to `gradle.properties`:
-
-```
-android.suppressUnsupportedCompileSdk=35
-```
-
-### "flutter_local_notifications" Compatibility Error
-
-This SDK no longer depends on `flutter_local_notifications`. If your project is using this library, ensure you're using a version compatible with your Flutter version.
-
-### Firebase "Default FirebaseApp" Error
-
-If you encounter the "Default FirebaseApp is not initialized" error, make sure you have called:
-
-```dart
-await Firebase.initializeApp();
+This is a Kotlin DSL syntax error injected by older Flutter tooling. Replace with:
+```kotlin
+minSdk = 23
 ```
 
-before using any Firebase features.
+**`win32` package error: `UnmodifiableUint8ListView isn't a type`**
 
-### Android Build Errors with Flutter
+Requires `win32 >= 5.x`. Upgrade `device_info_plus` to `^11.0.0`:
+```bash
+flutter pub upgrade device_info_plus
+```
 
-If you encounter Android build errors, try:
+**Android: plugins require compileSdk 36**
+
+`flutter_plugin_android_lifecycle`, `image_picker_android`, `path_provider_android`, and `video_player_android` all require `compileSdk = 36`. Set it in `build.gradle.kts`.
+
+**Firebase: "Default FirebaseApp is not initialized"**
+
+Ensure `await Firebase.initializeApp()` is called before any Firebase usage in `main()`.
+
+**Clean build after dependency changes:**
 
 ```bash
-flutter clean
-cd android
-./gradlew clean
-cd ..
-flutter pub get
+flutter clean && flutter pub get
+cd android && ./gradlew clean && cd ..
+flutter run
 ```
 
-## API
-
-### Messages
-
-- `createRoom` - Create a new chat room
-- `sendMessage` - Send a message
-- `actionOnMessage` - Perform an action on a message (reaction)
-- `removeMessage` - Delete a message
-- `getMessageHistory` - Get message history
-
-### Events
-
-- `message` - New message available
-- `someone_typing` - Admin is typing/stopped typing
-- `member_join` - Admin joined the conversation
-- `member_disconnect` - Admin offline
-- `member_connect` - Admin online
-- `lt_reaction` - Message reaction received
-- `remove_message` - Message deleted
+---
 
 ## License
 
-Copyright © 2024 VIHAT Solution
-
-[License details]
+Copyright © 2024 VIHAT Solution. All rights reserved.

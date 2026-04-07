@@ -137,7 +137,7 @@ class ChatState extends State<ChatScreen> {
         EasyLoading.dismiss();
         showCustomDialog(
           context: context,
-          message: e.message["message"],
+          message: e.errorKey,
         );
       }
     }
@@ -443,7 +443,7 @@ class ChatState extends State<ChatScreen> {
                     if (error is LiveTalkError) {
                       showCustomDialog(
                         context: context,
-                        message: error.message["message"] as String,
+                        message: error.errorKey,
                       );
                     }
                   }
@@ -512,7 +512,7 @@ class ChatState extends State<ChatScreen> {
                                   if (mounted) {
                                     showCustomDialog(
                                       context: context,
-                                      message: error.message["message"],
+                                      message: error.errorKey,
                                     );
                                   }
                                 }
@@ -543,7 +543,7 @@ class ChatState extends State<ChatScreen> {
                                   if (mounted) {
                                     showCustomDialog(
                                       context: context,
-                                      message: error.message["message"],
+                                      message: error.errorKey,
                                     );
                                   }
                                 }
@@ -615,7 +615,7 @@ class ChatState extends State<ChatScreen> {
                     if (error is LiveTalkError) {
                       showCustomDialog(
                         context: context,
-                        message: error.message["message"] as String,
+                        message: error.errorKey,
                       );
                     }
                   }
